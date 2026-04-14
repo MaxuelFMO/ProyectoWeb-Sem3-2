@@ -57,3 +57,65 @@ export const ProductAPI = {
         return await response.json();
     }
 };
+
+export const BienAPI = {
+    getAll: async () => {
+        const response = await fetch(`${BASE_URL}/bienes`);
+        return await response.json();
+    },
+    getById: async (id) => {
+        const response = await fetch(`${BASE_URL}/bienes/${id}`);
+        return await response.json();
+    },
+    create: async (bien) => {
+        const response = await fetch(`${BASE_URL}/bienes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bien)
+        });
+        return await response.json();
+    },
+    update: async (id, bien) => {
+        const response = await fetch(`${BASE_URL}/bienes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bien)
+        });
+        return await response.json();
+    },
+    delete: async (id) => {
+        const response = await fetch(`${BASE_URL}/bienes/${id}`, {
+            method: 'DELETE'
+        });
+        return await response.json();
+    }
+};
+
+export const HistorialAPI = {
+    getAll: async () => {
+        const response = await fetch(`${BASE_URL}/historial`);
+        return await response.json();
+    },
+    getByPersona: async (id_persona) => {
+        const response = await fetch(`${BASE_URL}/historial/persona/${id_persona}`);
+        return await response.json();
+    },
+    getById: async (id) => {
+        const response = await fetch(`${BASE_URL}/historial/${id}`);
+        return await response.json();
+    },
+    create: async (historial) => {
+        const response = await fetch(`${BASE_URL}/historial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(historial)
+        });
+        return await response.json();
+    },
+    delete: async (id) => {
+        const response = await fetch(`${BASE_URL}/historial/${id}`, {
+            method: 'DELETE'
+        });
+        return await response.json();
+    }
+};

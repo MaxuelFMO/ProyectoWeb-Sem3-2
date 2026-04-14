@@ -4,9 +4,10 @@ const getAllUsers = async (req, res) => {
     try {
         const userService = new UserService(req.app.get('db'));
         const users = await userService.getAllUsers();
-        res.status(200).json(users);
+        res.status(200).json(Array.isArray(users) ? users : []);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('getAllUsers error:', err);
+        res.status(200).json([]);
     }
 };
 

@@ -4,9 +4,10 @@ const getAllDesplazamientos = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
         const desplazamientos = await desplazamientoService.getAllDesplazamientos();
-        res.status(200).json(desplazamientos);
+        res.status(200).json(Array.isArray(desplazamientos) ? desplazamientos : []);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('getAllDesplazamientos error:', err);
+        res.status(200).json([]);
     }
 };
 

@@ -1,4 +1,31 @@
+import { useEffect, useState } from 'react';
+import { HistorialAPI } from '../api/apiService';
+
 function Historial() {
+  const [historial, setHistorial] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistorial();
+  }, []);
+
+  const fetchHistorial = async () => {
+    try {
+      const data = await HistorialAPI.getAll();
+      setHistorial(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error cargando historial:', error);
+      setHistorial([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatFecha = (fecha) => {
+    if (!fecha) return 'N/A';
+    return new Date(fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <section className="space-y-6">
       <div className="rounded-[32px] border border-white/10 bg-[#111827]/80 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.35)]">
@@ -23,7 +50,7 @@ function Historial() {
             <i className="bi bi-journal-text text-2xl" />
             <span className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Eventos</span>
           </div>
-          <p className="mt-5 text-4xl font-black">512</p>
+          <p className="mt-5 text-4xl font-black">{loading ? '...' : historial.length}</p>
         </div>
         <div className="rounded-[28px] border border-white/10 bg-[#0f172a]/80 p-6 text-white">
           <div className="flex items-center gap-3 text-cyan-300">
@@ -38,6 +65,27 @@ function Historial() {
             <span className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Alertas</span>
           </div>
           <p className="mt-5 text-4xl font-black">12</p>
+        </div>
+      </div>
+
+      <div className="rounded-[32px] border border-white/10 bg-[#111827]/80 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.25)]">
+        <h3 className="text-xl font-black text-white mb-6">Últimas acciones</h3>
+        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+          {historial.slice(0, 20).map((registro) => (
+            <div key={registro.id_historial} className="rounded-2xl border border-white/10 bg-[#0f172a]/80 p-4 hover:bg-white/5 transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="font-bold text-white">{registro.accion}</p>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">{registro.nombres} {registro.apellidos}</p>
+                  {registro.descripcion && <p className="text-xs text-[var(--text-muted)] mt-2">{registro.descripcion}</p>}
+                  <div className="mt-3 flex gap-4">
+                    <span className="text-xs bg-violet-500/20 text-violet-300 px-3 py-1 rounded-full">{formatFecha(registro.fecha_hora)}</span>
+                    <span className="text-xs bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-full">Usuario: {registro.usuario_registro || 'Sistema'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

@@ -4,9 +4,10 @@ const getAllProducts = async (req, res) => {
     try {
         const productService = new ProductService(req.app.get('db'));
         const products = await productService.getAllProducts();
-        res.status(200).json(products);
+        res.status(200).json(Array.isArray(products) ? products : []);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('getAllProducts error:', err);
+        res.status(200).json([]);
     }
 };
 

@@ -4,35 +4,35 @@ class UserModel {
     }
 
     async findAll() {
-        const [rows] = await this.db.query('SELECT id_persona, nombres, apellidos, fecha_nacimiento, direccion, estado, fecha_creacion, id_tipo_documento FROM users');
+        const [rows] = await this.db.query('SELECT id_persona as id, nombres as name, apellidos, fecha_nacimiento, direccion, estado, fecha_creacion FROM users');
         return rows;
     }
 
     async findById(id) {
-        const [rows] = await this.db.query('SELECT id, name, email, created_at FROM users WHERE id = ?', [id]);
+        const [rows] = await this.db.query('SELECT id_persona as id, nombres as name, apellidos, fecha_nacimiento, direccion, estado, fecha_creacion FROM users WHERE id_persona = ?', [id]);
         return rows[0];
     }
 
     async create(user) {
-        const { name, email, password } = user;
+        const { name, apellidos = '', fecha_nacimiento = null, direccion = '' } = user;
         const [result] = await this.db.query(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-            [name, email, password]
+            'INSERT INTO users (nombres, apellidos, fecha_nacimiento, direccion, estado) VALUES (?, ?, ?, ?, TRUE)',
+            [name, apellidos, fecha_nacimiento, direccion]
         );
         return result.insertId;
     }
 
     async update(id, user) {
-        const { name, email } = user;
+        const { name, apellidos = '', fecha_nacimiento = null, direccion = '' } = user;
         await this.db.query(
-            'UPDATE users SET name = ?, email = ? WHERE id = ?',
-            [name, email, id]
+            'UPDATE users SET nombres = ?, apellidos = ?, fecha_nacimiento = ?, direccion = ? WHERE id_persona = ?',
+            [name, apellidos, fecha_nacimiento, direccion, id]
         );
         return true;
     }
 
     async delete(id) {
-        await this.db.query('DELETE FROM users WHERE id = ?', [id]);
+        await this.db.query('DELETE FROM users WHERE id_persona = ?', [id]);
         return true;
     }
 }

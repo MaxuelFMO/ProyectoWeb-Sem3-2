@@ -11,10 +11,12 @@ function Administrador() {
   const fetchData = async () => {
     try {
       const [userData, productData] = await Promise.all([UserAPI.getAll(), ProductAPI.getAll()]);
-      setUsers(userData);
-      setProducts(productData);
+      setUsers(Array.isArray(userData) ? userData : []);
+      setProducts(Array.isArray(productData) ? productData : []);
     } catch (error) {
       console.error('Error cargando datos:', error);
+      setUsers([]);
+      setProducts([]);
     } finally {
       setLoading(false);
     }

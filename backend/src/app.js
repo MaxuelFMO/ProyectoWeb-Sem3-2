@@ -57,10 +57,14 @@ const dbPromise = mysql.createPool({
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const desplazamientoRoutes = require('./routes/desplazamientoRoutes');
+const bienRoutes = require('./routes/bienRoutes');
+const historialMovimientosRoutes = require('./routes/historialMovimientosRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/desplazamientos', desplazamientoRoutes);
+app.use('/api/bienes', bienRoutes);
+app.use('/api/historial', historialMovimientosRoutes);
 
 app.get('/', (req, res) => {
     res.send('API CRUD Monorepo Running');
