@@ -1,4 +1,3 @@
--- Database initialization script
 CREATE DATABASE IF NOT EXISTS crud_template;
 USE crud_template;
 
@@ -6,6 +5,7 @@ USE crud_template;
 -- TABLA: Persona
 -- =====================================
 CREATE TABLE users (
+
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -32,8 +32,6 @@ CREATE TABLE EstadoDesplazamiento (
     descripcion VARCHAR(100) NOT NULL
 );
 
--- =====================================
--- TABLA: TipoBien
 -- =====================================
 CREATE TABLE TipoBien (
     id_tipo_bien INT AUTO_INCREMENT PRIMARY KEY,
