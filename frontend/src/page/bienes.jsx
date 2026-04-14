@@ -1,9 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BienAPI } from '../api/apiService';
 
 function Bienes() {
+  const [bienes, setBienes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showImportModal, setShowImportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [importResult, setImportResult] = useState(null);
+
+  useEffect(() => {
+    fetchBienes();
+  }, []);
+
+  const fetchBienes = async () => {
+    try {
+      const data = await BienAPI.getAll();
+      setBienes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error cargando bienes:', error);
+      setBienes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buenosEstado = bienes.filter(b => b.estado === 1).length;
+  const atencion = bienes.filter(b => b.estado === 0).length;
 
   const handleImportExcel = async (event) => {
     event.preventDefault();
