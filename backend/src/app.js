@@ -4,52 +4,74 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-async function initDatabase(db) {
-    try {
-        const sqlFilePath = path.join(__dirname, "./db/init.sql");
-        console.log(__dirname);
-        const sqlQueries = fs.readFileSync(sqlFilePath, 'utf8');
+let db
+async function createDatabase() {
+    await mysql.createConnection({
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || ''
+    }).then(conn => {
+        return conn.query('CREATE DATABASE IF NOT EXISTS crud_template')
+            .then(() => conn.end());
+    });
 
-        await db.query(sqlQueries);
-        console.log('Database and tables created successfully!');
+    console.log('Database ensured');
+}
+
+function createPool() {
+    return mysql.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: 'crud_template',
+        multipleStatements: true,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
+}
+
+async function runMigrations(pool) {
+    const sqlFilePath = path.join(__dirname, "./db/init.sql");
+    const sqlQueries = fs.readFileSync(sqlFilePath, 'utf8');
+
+    try {
+        await pool.query(sqlQueries);
+        console.log('Tables created successfully!');
     } catch (err) {
         console.error('Error executing SQL file:', err.message);
     }
 }
 
-const dbPromise = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    // database: process.env.DB_NAME || 'crud_template',
-    multipleStatements: true,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
 (async () => {
     try {
-        const conn = await dbPromise.getConnection();
-        console.log('MySQL Database Connected');
+        await createDatabase();   // 1. crea DB
+
+        db = createPool();        // 2. conecta con DB
+
+        await runMigrations(db);  // 3. crea tablas
+
+        const conn = await db.getConnection();
+        console.log('MySQL Connected');
         conn.release();
 
-        app.set('db', dbPromise);
-
-        await initDatabase(dbPromise);
+        app.set('db', db);
 
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
+
     } catch (err) {
-        console.error('Database connection failed:', err.message);
+        console.error('Startup error:', err.message);
         process.exit(1);
     }
 })();
