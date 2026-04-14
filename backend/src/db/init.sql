@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     apellidos VARCHAR(100) NOT NULL,
     fecha_nacimiento DATE,
     direccion VARCHAR(255),
+    password_hash VARCHAR(255) NOT NULL,
     estado BOOLEAN DEFAULT TRUE,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     id_tipo_documento INT
@@ -103,13 +104,13 @@ CREATE TABLE IF NOT EXISTS HistorialMovimientos (
 -- ÍNDICES
 -- =====================================
 ALTER TABLE HistorialMovimientos
-ADD INDEX idx_historial_persona (id_persona);
+ADD INDEX IF NOT EXISTS idx_historial_persona (id_persona);
 
 ALTER TABLE HistorialMovimientos
-ADD INDEX idx_historial_desplazamiento (id_desplazamiento);
+ADD INDEX IF NOT EXISTS idx_historial_desplazamiento (id_desplazamiento);
 
 ALTER TABLE Desplazamiento
-ADD INDEX idx_desplazamiento_motivo (id_motivo);
+ADD INDEX IF NOT EXISTS idx_desplazamiento_motivo (id_motivo);
 
 ALTER TABLE Desplazamiento
-ADD INDEX idx_desplazamiento_estado (id_estado);
+ADD INDEX IF NOT EXISTS idx_desplazamiento_estado (id_estado);

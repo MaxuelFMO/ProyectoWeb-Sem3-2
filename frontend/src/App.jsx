@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './page/Login';
 import Administrador from './page/administrador';
 import Personas from './page/personas';
 import Bienes from './page/bienes';
@@ -11,7 +13,16 @@ function App() {
     <NotificationProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/login" element={<Login />} />
+          
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Administrador />} />
             <Route path="personas" element={<Personas />} />
             <Route path="bienes" element={<Bienes />} />

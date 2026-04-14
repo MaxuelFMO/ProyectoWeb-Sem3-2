@@ -1,9 +1,16 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 
 function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    navigate('/login')
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-dark)] text-[var(--text-main)]">
@@ -39,7 +46,7 @@ function Layout() {
                       Sistema moderno para gestores. Navega fácil, revisa estadísticas y accede a tu contenido con claridad.
                     </p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:w-[420px]">
+                  <div className="grid gap-3 sm:grid-cols-3 lg:w-[520px]">
                     <button className="inline-flex items-center justify-center gap-2 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition hover:border-cyan-400/40 hover:bg-white/10">
                       <i className="bi bi-bar-chart-fill text-lg text-cyan-300" />
                       Analizar
@@ -47,6 +54,13 @@ function Layout() {
                     <button className="inline-flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-cyan-500/20 transition hover:opacity-95">
                       <i className="bi bi-speedometer2 text-lg" />
                       Actualizar
+                    </button>
+                    <button 
+                      onClick={handleLogout}
+                      className="inline-flex items-center justify-center gap-2 rounded-3xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 transition hover:bg-red-500/20"
+                    >
+                      <i className="bi bi-box-arrow-right text-lg" />
+                      Cerrar sesión
                     </button>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const seedDatabase = require('./db/seed');
 
 const app = express();
 
@@ -58,6 +59,8 @@ async function runMigrations(pool) {
         db = createPool();        // 2. conecta con DB
 
         await runMigrations(db);  // 3. crea tablas
+        
+        await seedDatabase(db);   // 4. crea usuario demo
 
         const conn = await db.getConnection();
         console.log('MySQL Connected');
@@ -81,7 +84,9 @@ const productRoutes = require('./routes/productRoutes');
 const desplazamientoRoutes = require('./routes/desplazamientoRoutes');
 const bienRoutes = require('./routes/bienRoutes');
 const historialMovimientosRoutes = require('./routes/historialMovimientosRoutes');
+const authRoutes = require('./routes/authRoutes');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/desplazamientos', desplazamientoRoutes);
