@@ -4,7 +4,7 @@ class UserModel {
     }
 
     async findAll() {
-        const [rows] = await this.db.query('SELECT id, name, email, created_at FROM users');
+        const [rows] = await this.db.query('SELECT id_persona, nombres, apellidos, fecha_nacimiento, direccion, estado, fecha_creacion, id_tipo_documento FROM users');
         return rows;
     }
 

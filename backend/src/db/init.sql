@@ -5,7 +5,7 @@ USE crud_template;
 -- =====================================
 -- TABLA: Persona
 -- =====================================
-CREATE TABLE Persona (
+CREATE TABLE users (
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -30,6 +30,32 @@ CREATE TABLE MotivoDesplazamiento (
 CREATE TABLE EstadoDesplazamiento (
     id_estado INT AUTO_INCREMENT PRIMARY KEY,
     descripcion VARCHAR(100) NOT NULL
+);
+
+-- =====================================
+-- TABLA: TipoBien
+-- =====================================
+CREATE TABLE TipoBien (
+    id_tipo_bien INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- =====================================
+-- TABLA: Bien
+-- =====================================
+CREATE TABLE Bien (
+    id_bien INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion VARCHAR(255),
+    valor DECIMAL(10,2),
+    id_tipo_bien INT,
+    estado BOOLEAN DEFAULT TRUE,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_bien_tipo
+        FOREIGN KEY (id_tipo_bien) REFERENCES TipoBien(id_tipo_bien)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
 -- =====================================
@@ -67,7 +93,7 @@ CREATE TABLE HistorialMovimientos (
     usuario_registro VARCHAR(100),
 
     CONSTRAINT fk_historial_persona
-        FOREIGN KEY (id_persona) REFERENCES Persona(id_persona)
+        FOREIGN KEY (id_persona) REFERENCES users(id_persona)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
