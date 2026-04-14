@@ -30,9 +30,11 @@ dbPromise.then(conn => {
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const productRoutes = require('./routes/desplazamientoRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/desplazamientos', desplazamientoRoutes);
 
 app.get('/', (req, res) => {
     res.send('API CRUD Monorepo Running');
