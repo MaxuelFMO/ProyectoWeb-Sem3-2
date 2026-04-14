@@ -1,11 +1,7 @@
-CREATE DATABASE IF NOT EXISTS crud_template;
-USE crud_template;
-
 -- =====================================
--- TABLA: Persona
+-- TABLA: Persona (users)
 -- =====================================
-CREATE TABLE users (
-
+CREATE TABLE IF NOT EXISTS users (
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -19,7 +15,7 @@ CREATE TABLE users (
 -- =====================================
 -- TABLA: MotivoDesplazamiento
 -- =====================================
-CREATE TABLE MotivoDesplazamiento (
+CREATE TABLE IF NOT EXISTS MotivoDesplazamiento (
     id_motivo INT AUTO_INCREMENT PRIMARY KEY,
     descripcion VARCHAR(150) NOT NULL
 );
@@ -27,13 +23,15 @@ CREATE TABLE MotivoDesplazamiento (
 -- =====================================
 -- TABLA: EstadoDesplazamiento
 -- =====================================
-CREATE TABLE EstadoDesplazamiento (
+CREATE TABLE IF NOT EXISTS EstadoDesplazamiento (
     id_estado INT AUTO_INCREMENT PRIMARY KEY,
     descripcion VARCHAR(100) NOT NULL
 );
 
 -- =====================================
-CREATE TABLE TipoBien (
+-- TABLA: TipoBien
+-- =====================================
+CREATE TABLE IF NOT EXISTS TipoBien (
     id_tipo_bien INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL
 );
@@ -41,7 +39,7 @@ CREATE TABLE TipoBien (
 -- =====================================
 -- TABLA: Bien
 -- =====================================
-CREATE TABLE Bien (
+CREATE TABLE IF NOT EXISTS Bien (
     id_bien INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     descripcion VARCHAR(255),
@@ -59,14 +57,14 @@ CREATE TABLE Bien (
 -- =====================================
 -- TABLA: Desplazamiento
 -- =====================================
-CREATE TABLE Desplazamiento (
+CREATE TABLE IF NOT EXISTS Desplazamiento (
     id_desplazamiento INT AUTO_INCREMENT PRIMARY KEY,
     fecha_inicio DATETIME NOT NULL,
     fecha_fin DATETIME,
     id_motivo INT,
     id_estado INT,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT fk_desplazamiento_motivo
         FOREIGN KEY (id_motivo) REFERENCES MotivoDesplazamiento(id_motivo)
         ON UPDATE CASCADE
@@ -81,7 +79,7 @@ CREATE TABLE Desplazamiento (
 -- =====================================
 -- TABLA: HistorialMovimientos
 -- =====================================
-CREATE TABLE HistorialMovimientos (
+CREATE TABLE IF NOT EXISTS HistorialMovimientos (
     id_historial INT AUTO_INCREMENT PRIMARY KEY,
     id_persona INT,
     id_desplazamiento INT,
@@ -102,9 +100,16 @@ CREATE TABLE HistorialMovimientos (
 );
 
 -- =====================================
--- ÍNDICES (opcional pero recomendado)
+-- ÍNDICES
 -- =====================================
-CREATE INDEX idx_historial_persona ON HistorialMovimientos(id_persona);
-CREATE INDEX idx_historial_desplazamiento ON HistorialMovimientos(id_desplazamiento);
-CREATE INDEX idx_desplazamiento_motivo ON Desplazamiento(id_motivo);
-CREATE INDEX idx_desplazamiento_estado ON Desplazamiento(id_estado);
+ALTER TABLE HistorialMovimientos
+ADD INDEX idx_historial_persona (id_persona);
+
+ALTER TABLE HistorialMovimientos
+ADD INDEX idx_historial_desplazamiento (id_desplazamiento);
+
+ALTER TABLE Desplazamiento
+ADD INDEX idx_desplazamiento_motivo (id_motivo);
+
+ALTER TABLE Desplazamiento
+ADD INDEX idx_desplazamiento_estado (id_estado);
