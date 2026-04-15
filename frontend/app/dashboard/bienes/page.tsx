@@ -374,8 +374,8 @@ export default function BienesPage() {
                           const stateClasses = isTransfer
                             ? 'bg-sky-600/10 text-sky-700'
                             : bien.estado
-                            ? 'bg-emerald-600/10 text-emerald-700'
-                            : 'bg-rose-600/10 text-rose-700';
+                              ? 'bg-emerald-600/10 text-emerald-700'
+                              : 'bg-rose-600/10 text-rose-700';
 
                           return (
                             <tr key={bien.id_bien} className="hover:bg-muted/10 transition-colors">
@@ -494,14 +494,19 @@ export default function BienesPage() {
                     try {
                       const data = new FormData();
                       data.append('file', file);
-                      await APIClient.postForm('/bienes/import', data);
-                      addToast('Archivo importado correctamente', 'success');
+                      const result = await APIClient.postForm<any>('/bienes/import', data);
+                      let msg = `Carga finalizada: ${result.imported} bienes añadidos.`;
+                      if (result.skipped > 0) {
+                        msg += ` Se omitieron ${result.skipped} duplicados por nombre.`;
+                      }
+                      addToast(msg, result.skipped > 0 ? 'warning' : 'success');
                       loadBienes();
                     } catch (error) {
                       const message = error instanceof Error ? error.message : 'Error importando el archivo';
                       addToast(message, 'error');
                     } finally {
                       setLoadingFile(false);
+                      event.target.value = ''; // Reset input to allow re-upload
                     }
                   }}
                 />
@@ -621,7 +626,7 @@ export default function BienesPage() {
               {incoming.map((request) => {
                 const isIncomingForMe = request.id_persona_destino === user?.id_persona;
                 const isAdminManage = user?.id_tipo_cargo === 1 && !isIncomingForMe;
-                
+
                 return (
                   <div key={request.id_desplazamiento} className={`rounded-xl border p-4 shadow-sm ${isAdminManage ? 'border-amber-500/30 bg-amber-500/5' : 'border-border/40 bg-background'}`}>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

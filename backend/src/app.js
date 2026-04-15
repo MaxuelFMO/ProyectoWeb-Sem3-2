@@ -82,16 +82,19 @@ async function runMigrations(pool) {
         await createDatabase();   // 1. crea DB
 
         db = createPool();        // 2. conecta con DB
+        app.set('db', db);        // <--- SET EARLY to prevent 500s in other middlewares
 
         await runMigrations(db);  // 3. crea tablas
 
-        await seedDatabase(db);   // 4. crea usuario demo
+        try {
+            await seedDatabase(db);   // 4. crea usuario demo
+        } catch (seedErr) {
+            console.error('Non-blocking Seed Error:', seedErr.message);
+        }
 
         const conn = await db.getConnection();
         console.log('MySQL Connected');
         conn.release();
-
-        app.set('db', db);
 
         const PORT = process.env.PORT || 3001;
         app.listen(PORT, () => {

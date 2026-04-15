@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 
 const seedDatabase = async (db) => {
     try {
-        console.log('--- Iniciando Seed de Base de Datos (Estados Completos) ---');
+        console.log('--- Iniciando Seed de Base de Datos (Integración Completa) ---');
 
         // --- 1. USUARIOS ---
         const passwordHash = await bcrypt.hash('password123', 10);
@@ -31,12 +31,12 @@ const seedDatabase = async (db) => {
 
         // --- 2. BIENES ---
         const bienesData = [
-            { nombre: 'Laptop Pro 14', owner: 'juan' },
-            { nombre: 'Monitor curvo 34', owner: 'juan' },
-            { nombre: 'Silla Mesh Plus', owner: 'maria' },
-            { nombre: 'iPad Air 5', owner: 'pedro' },
-            { nombre: 'Cámara DSLR Z6', owner: 'ana' },
-            { nombre: 'Scanner Industrial', owner: 'sofia' },
+            { codigo: 'SEED001', nombre: 'Laptop Pro 14', owner: 'juan' },
+            { codigo: 'SEED002', nombre: 'Monitor curvo 34', owner: 'juan' },
+            { codigo: 'SEED003', nombre: 'Silla Mesh Plus', owner: 'maria' },
+            { codigo: 'SEED004', nombre: 'iPad Air 5', owner: 'pedro' },
+            { codigo: 'SEED005', nombre: 'Cámara DSLR Z6', owner: 'ana' },
+            { codigo: 'SEED006', nombre: 'Scanner Industrial', owner: 'sofia' },
         ];
 
         const bienIds = {};
@@ -44,8 +44,8 @@ const seedDatabase = async (db) => {
             const [existing] = await db.query('SELECT id_bien FROM Bien WHERE nombre = ?', [b.nombre]);
             if (existing.length === 0) {
                 const [res] = await db.query(
-                    'INSERT INTO Bien (nombre, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, 1, ?, TRUE)',
-                    [b.nombre, 1000, userIds[b.owner]]
+                    'INSERT INTO Bien (codigo, nombre, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, 1, ?, TRUE)',
+                    [b.codigo, b.nombre, 1000, userIds[b.owner]]
                 );
                 bienIds[b.nombre] = res.insertId;
             } else {
@@ -53,9 +53,8 @@ const seedDatabase = async (db) => {
             }
         }
 
-        // --- 3. DESPLAZAMIENTOS Y HISTORIAS (Todos los estados) ---
+        // --- 3. DESPLAZAMIENTOS Y HISTORIAS (4 Estados) ---
         
-        // Función auxiliar para insertar historia
         const addHistory = async (userId, desplId, accion, desc) => {
             await db.query(
                 'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
@@ -73,9 +72,8 @@ const seedDatabase = async (db) => {
                 razon: 'Mudanza a nueva sucursal Norte',
                 items: ['Laptop Pro 14', 'Monitor curvo 34'],
                 steps: [
-                    { action: 'Creado', desc: 'Juan inició el traslado de equipo' },
-                    { action: 'Actualizado', desc: 'Maria confirmó la recepción de los bienes' },
-                    { action: 'Completado', desc: 'Traslado finalizado exitosamente' }
+                    { action: 'Solicitud Creada', desc: 'Juan inició el traslado por cambio de sucursal' },
+                    { action: 'Aceptado y Completado', desc: 'Maria aceptó el equipo. Propiedad transferida.' }
                 ]
             },
             {
@@ -87,7 +85,7 @@ const seedDatabase = async (db) => {
                 razon: 'Asignación de mobiliario ergonómico',
                 items: ['Silla Mesh Plus'],
                 steps: [
-                    { action: 'Creado', desc: 'Maria solicitó el envío de la silla a Pedro' }
+                    { action: 'Solicitud Creada', desc: 'Maria envió silla ergonómica a Pedro (Pendiente)' }
                 ]
             },
             {
@@ -99,8 +97,8 @@ const seedDatabase = async (db) => {
                 razon: 'Préstamo de tablet para inventario',
                 items: ['iPad Air 5'],
                 steps: [
-                    { action: 'Creado', desc: 'Pedro solicitó el préstamo' },
-                    { action: 'Rechazado', desc: 'Ana rechazó la solicitud por falta de stock disponible' }
+                    { action: 'Solicitud Creada', desc: 'Pedro solicitó tablet prestada' },
+                    { action: 'Rechazado', desc: 'Ana rechazó: item actualmente en mantenimiento' }
                 ]
             },
             {
@@ -112,8 +110,8 @@ const seedDatabase = async (db) => {
                 razon: 'Envío de cámara para mantenimiento',
                 items: ['Cámara DSLR Z6'],
                 steps: [
-                    { action: 'Creado', desc: 'Ana inició el proceso de envío' },
-                    { action: 'Cancelado', desc: 'Ana canceló la solicitud: se realizará mantenimiento local' }
+                    { action: 'Solicitud Creada', desc: 'Ana registró envío de cámara' },
+                    { action: 'Cancelado', desc: 'Ana canceló: el técnico vendrá a la oficina' }
                 ]
             }
         ];
@@ -135,17 +133,14 @@ const seedDatabase = async (db) => {
                         await db.query('UPDATE Bien SET id_persona = ? WHERE id_bien = ?', [userIds[sc.destino], bienIds[itemName]]);
                     }
                 }
-                console.log(`✓ Escenario ${sc.tag} creado.`);
             } else {
                 desplId = existing[0].id_desplazamiento;
-                console.log(`- Escenario ${sc.tag} ya existe.`);
             }
 
-            // Asegurar que las historias existan para este escenario
             for (const step of sc.steps) {
                 const [histExp] = await db.query(
-                    'SELECT id_historial FROM HistorialMovimientos WHERE id_desplazamiento = ? AND accion = ? AND descripcion = ?',
-                    [desplId, step.action, step.desc]
+                    'SELECT id_historial FROM HistorialMovimientos WHERE id_desplazamiento = ? AND accion = ?',
+                    [desplId, step.action]
                 );
                 if (histExp.length === 0) {
                     await addHistory(userIds[sc.origen], desplId, step.action, step.desc);
@@ -153,9 +148,10 @@ const seedDatabase = async (db) => {
             }
         }
 
-        console.log('--- Seed de Escenarios de Estado Completado ---');
+        console.log('--- Seed de Base de Datos Finalizado (Todos los estados cubiertos) ---');
     } catch (err) {
-        console.error('Error en el Seed de estados:', err.message);
+        console.error('CRITICAL: Error en el Seed:', err.message);
+        throw err;
     }
 };
 

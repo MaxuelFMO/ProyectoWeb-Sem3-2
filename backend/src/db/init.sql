@@ -49,6 +49,7 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS Bien (
         id_bien INT AUTO_INCREMENT PRIMARY KEY,
+        codigo VARCHAR(50) UNIQUE NOT NULL,
         nombre VARCHAR(150) NOT NULL,
         descripcion VARCHAR(255),
         valor DECIMAL(10, 2),

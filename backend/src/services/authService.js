@@ -23,10 +23,11 @@ class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const cargoId = user.id_tipo_cargo || 2; // Default to 'Usuario' (2)
 
         const [result] = await this.db.query(
-            'INSERT INTO Personas (nombres, apellidos, correo, password_hash, estado) VALUES (?, ?, ?, ?, TRUE)',
-            [nombres, apellidos, correo, hashedPassword]
+            'INSERT INTO Personas (nombres, apellidos, correo, password_hash, id_tipo_cargo, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
+            [nombres, apellidos, correo, hashedPassword, cargoId]
         );
 
         return result.insertId;
