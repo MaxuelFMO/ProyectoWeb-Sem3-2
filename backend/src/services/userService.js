@@ -26,6 +26,20 @@ class UserService {
     }
 
     async updateUser(id, userData) {
+        if (userData.currentPassword) {
+            const existingUser = await this.userModel.findByIdWithHash(id);
+            if (!existingUser) {
+                throw new Error('Usuario no encontrado');
+            }
+
+            const isValid = await bcrypt.compare(userData.currentPassword, existingUser.password_hash);
+            if (!isValid) {
+                throw new Error('Contraseña actual incorrecta');
+            }
+
+            delete userData.currentPassword;
+        }
+
         if (userData.password) {
             userData.password_hash = await bcrypt.hash(userData.password, 10);
             delete userData.password;

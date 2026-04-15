@@ -18,6 +18,14 @@ class UserModel {
         return rows[0];
     }
 
+    async findByIdWithHash(id) {
+        const [rows] = await this.db.query(
+            'SELECT id_persona as id_persona, nombres, apellidos, correo, fecha_nacimiento, direccion, estado, fecha_creacion, password_hash FROM Personas WHERE id_persona = ?',
+            [id]
+        );
+        return rows[0];
+    }
+
     async create(user) {
         const {
             nombres,

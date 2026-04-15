@@ -37,8 +37,8 @@ export default function DesplazamientosPage() {
         id_motivo: motivo,
         id_estado: estado,
       });
-      setDesplazamientos(res.data);
-      setTotal(res.total);
+      setDesplazamientos(Array.isArray(res.data) ? res.data : []);
+      setTotal(typeof res.total === 'number' ? res.total : 0);
       setPage(pageNum);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error loading displacements';

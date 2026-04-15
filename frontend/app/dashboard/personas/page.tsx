@@ -33,8 +33,8 @@ export default function PersonasPage() {
         limit,
         search: searchQuery || undefined,
       });
-      setPersonas(res.data);
-      setTotal(res.total);
+      setPersonas(Array.isArray(res.data) ? res.data : []);
+      setTotal(typeof res.total === 'number' ? res.total : 0);
       setPage(pageNum);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error loading personas';

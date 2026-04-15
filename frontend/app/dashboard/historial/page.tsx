@@ -31,7 +31,7 @@ export default function HistorialPage() {
       });
       
       // Filtrar en cliente si la API no lo soporta
-      let filtered = res.data;
+      let filtered = Array.isArray(res.data) ? res.data : [];
       if (query) {
         filtered = res.data.filter(
           (m) =>
@@ -42,7 +42,7 @@ export default function HistorialPage() {
       }
       
       setMovimientos(filtered);
-      setTotal(res.total);
+      setTotal(typeof res.total === 'number' ? res.total : 0);
       setPage(pageNum);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error loading historial';

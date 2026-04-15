@@ -8,6 +8,15 @@ import { useToast } from '@/components/providers/toast-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function SettingsPage() {
   const { user, setUser, token } = useAuth();
@@ -15,6 +24,8 @@ export default function SettingsPage() {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -43,6 +54,7 @@ export default function SettingsPage() {
           password: '',
           confirmPassword: '',
         });
+      setCurrentPassword('');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No se pudo cargar el perfil';
         addToast(message, 'error');
@@ -67,6 +79,20 @@ export default function SettingsPage() {
       return;
     }
 
+    if (!currentPassword) {
+      addToast('Ingresa tu contraseña actual para confirmar los cambios', 'warning');
+      return;
+    }
+
+    if (!user?.id_persona) {
+      addToast('Usuario no encontrado en sesión', 'error');
+      return;
+    }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     if (!user?.id_persona) {
       addToast('Usuario no encontrado en sesión', 'error');
       return;
@@ -81,6 +107,7 @@ export default function SettingsPage() {
         correo: formData.correo,
         fecha_nacimiento: formData.fecha_nacimiento || null,
         direccion: formData.direccion || '',
+        currentPassword,
       };
 
       if (formData.password) {
@@ -101,6 +128,8 @@ export default function SettingsPage() {
         apellidos: formData.apellidos,
         correo: formData.correo,
       }));
+      setConfirmOpen(false);
+      setCurrentPassword('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error actualizando perfil';
       addToast(message, 'error');
@@ -206,6 +235,47 @@ export default function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar cambios</DialogTitle>
+            <DialogDescription>
+              Para guardar los cambios en tu cuenta, ingresa tu contraseña actual.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground mb-2">
+                Contraseña actual
+              </label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Ingresa tu contraseña actual"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmOpen(false)}
+                disabled={saving}
+              >
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button onClick={handleConfirmSave} disabled={saving}>
+              {saving ? 'Guardando...' : 'Confirmar y guardar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
