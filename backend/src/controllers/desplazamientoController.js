@@ -62,6 +62,16 @@ const deleteDesplazamiento = async (req, res) => {
     }
 };
 
+const cancelDesplazamiento = async (req, res) => {
+    try {
+        const desplazamientoService = new DesplazamientoService(req.app.get('db'));
+        await desplazamientoService.updateDesplazamiento(req.params.id, { id_estado: 4 }, req.user.id); // 4 = Cancelado
+        res.status(200).json({ message: 'Desplazamiento cancelado' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getAllDesplazamientos,
     getDesplazamientoById,
@@ -69,4 +79,5 @@ module.exports = {
     updateDesplazamiento,
     updateDesplazamientoStatus,
     deleteDesplazamiento,
+    cancelDesplazamiento,
 };

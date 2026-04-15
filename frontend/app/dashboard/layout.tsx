@@ -60,7 +60,7 @@ export default function DashboardLayout({
     { href: '/dashboard/personas', label: 'Personas', icon: Users },
     { href: '/dashboard/bienes', label: 'Bienes', icon: Database },
     { href: '/dashboard/desplazamientos', label: 'Desplazamientos', icon: Database },
-    { href: '/dashboard/historial', label: 'Historial', icon: History },
+    ...(user?.tipo_cargo === 'Administrador' ? [{ href: '/dashboard/historial', label: 'Historial', icon: History }] : []),
     { href: '/dashboard/settings', label: 'Ajustes', icon: Settings },
   ];
 

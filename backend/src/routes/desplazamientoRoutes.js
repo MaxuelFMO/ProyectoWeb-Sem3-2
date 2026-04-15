@@ -9,6 +9,7 @@ router.get('/', desplazamientoController.getAllDesplazamientos);
 router.get('/:id', desplazamientoController.getDesplazamientoById);
 router.post('/', desplazamientoController.createDesplazamiento);
 router.put('/:id/status', desplazamientoController.updateDesplazamientoStatus);
+router.put('/:id/cancel', desplazamientoController.cancelDesplazamiento);
 router.put('/:id', desplazamientoController.updateDesplazamiento);
 router.delete('/:id', desplazamientoController.deleteDesplazamiento);
 

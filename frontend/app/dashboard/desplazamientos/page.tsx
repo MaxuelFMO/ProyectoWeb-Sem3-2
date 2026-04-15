@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDisplacements, type Displacement } from '@/hooks/use-displacements';
 import { useCatalogs } from '@/hooks/use-catalogs';
+import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/components/providers/toast-provider';
 import { Spinner } from '@/components/ui/spinner';
-import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Filter, TrendingUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Filter, TrendingUp, Eye } from 'lucide-react';
 import DisplacementForm from '@/components/domain/displacement-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 export default function DesplazamientosPage() {
+  const { user } = useAuth();
   const [desplazamientos, setDesplazamientos] = useState<Displacement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +26,8 @@ export default function DesplazamientosPage() {
   const [selectedDisplacement, setSelectedDisplacement] = useState<Displacement | null>(null);
   const [filterMotivo, setFilterMotivo] = useState<number | ''>('');
   const [filterEstado, setFilterEstado] = useState<number | ''>('');
+  const [selectedDisplacementForModal, setSelectedDisplacementForModal] = useState<Displacement | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   const { getDisplacements, deleteDisplacement } = useDisplacements();
   const { motivos, estados } = useCatalogs();
@@ -99,18 +105,58 @@ export default function DesplazamientosPage() {
     return 'gray';
   };
 
+  const chartData = useMemo(() => {
+    const stats = desplazamientos.reduce((acc, disp) => {
+      const estado = getEstadoLabel(disp.id_estado);
+      acc[estado] = (acc[estado] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(stats).map(([name, value]) => ({ name, value }));
+  }, [desplazamientos, estados]);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <TrendingUp className="text-primary" size={28} />
-          <h1 className="text-3xl font-bold text-foreground">Gestión de Desplazamientos</h1>
+          <h1 className="text-3xl font-bold text-foreground">Mis Desplazamientos</h1>
         </div>
         <p className="text-muted-foreground">
-          Registra y controla movimientos de bienes patrimoniales
+          Revisa tus solicitudes de traslado de bienes, tanto enviadas como recibidas.
         </p>
       </div>
+
+      {/* Chart */}
+      <Card className="border-border/40">
+        <CardHeader>
+          <CardTitle>Estadísticas de Desplazamientos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Main Card */}
       <Card className="border-border/40">
@@ -122,13 +168,6 @@ export default function DesplazamientosPage() {
                 {total} registros en total
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setShowForm(true)}
-              className="w-full sm:w-auto gap-2 bg-primary hover:bg-orange-700"
-            >
-              <Plus size={18} />
-              Nuevo desplazamiento
-            </Button>
           </div>
         </CardHeader>
 
@@ -245,20 +284,13 @@ export default function DesplazamientosPage() {
                           <td className="px-6 py-4 text-right space-x-1">
                             <button
                               onClick={() => {
-                                setSelectedDisplacement(disp);
-                                setShowForm(true);
+                                setSelectedDisplacementForModal(disp);
+                                setShowModal(true);
                               }}
                               className="inline-flex items-center justify-center p-2 hover:bg-accent/15 text-accent rounded-md transition-colors"
-                              title="Editar"
+                              title="Ver detalles"
                             >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(disp.id_desplazamiento)}
-                              className="inline-flex items-center justify-center p-2 hover:bg-destructive/15 text-destructive rounded-md transition-colors"
-                              title="Eliminar"
-                            >
-                              <Trash2 size={16} />
+                              <Eye size={16} />
                             </button>
                           </td>
                         </tr>
@@ -330,14 +362,45 @@ export default function DesplazamientosPage() {
         </CardContent>
       </Card>
 
-      {/* Form Modal */}
-      {showForm && (
-        <DisplacementForm
-          displacement={selectedDisplacement}
-          onClose={handleFormClose}
-          onSuccess={handleFormSuccess}
-        />
-      )}
+      {/* Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalles del Desplazamiento</DialogTitle>
+            <DialogDescription>
+              Información completa del desplazamiento seleccionado.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDisplacementForModal && (
+            <div className="space-y-4">
+              <div>
+                <strong>Fecha Inicio:</strong> {new Date(selectedDisplacementForModal.fecha_inicio).toLocaleDateString()}
+              </div>
+              <div>
+                <strong>Fecha Fin:</strong> {selectedDisplacementForModal.fecha_fin ? new Date(selectedDisplacementForModal.fecha_fin).toLocaleDateString() : 'N/A'}
+              </div>
+              <div>
+                <strong>Motivo:</strong> {getMotivoLabel(selectedDisplacementForModal.id_motivo)}
+              </div>
+              <div>
+                <strong>Estado:</strong> {getEstadoLabel(selectedDisplacementForModal.id_estado)}
+              </div>
+              <div>
+                <strong>Bienes:</strong>
+                <ul>
+                  {(selectedDisplacementForModal as any).bienes_nombres?.split(', ').map((name: string, index: number) => (
+                    <li key={index}>{name}</li>
+                  )) || 'No disponible'}
+                </ul>
+              </div>
+              <div>
+                <strong>Total Valor:</strong> $
+                {(selectedDisplacementForModal as any).bienes_valores?.split(', ').reduce((sum: number, val: string) => sum + (parseFloat(val) || 0), 0).toFixed(2) || '0.00'}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
