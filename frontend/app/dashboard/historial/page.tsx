@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/components/providers/toast-provider';
 import { Spinner } from '@/components/ui/spinner';
-import { Clock, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, Download, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { APIClient } from '@/lib/api';
 
 interface HistorialItem {
@@ -151,6 +152,29 @@ export default function HistorialPage() {
 
   const totalPages = Math.ceil(total / limit);
 
+  const chartData = useMemo(() => {
+    const stats: Record<string, number> = {
+      'Creados': 0,
+      'Actualizados': 0,
+      'Eliminados': 0,
+      'Otros': 0,
+    };
+
+    items.forEach((item) => {
+      if (item.accion.includes('Creado') || item.accion.includes('Creada')) {
+        stats['Creados']++;
+      } else if (item.accion.includes('Actualizado') || item.accion.includes('Actualizada')) {
+        stats['Actualizados']++;
+      } else if (item.accion.includes('Eliminado') || item.accion.includes('Eliminada')) {
+        stats['Eliminados']++;
+      } else {
+        stats['Otros']++;
+      }
+    });
+
+    return Object.entries(stats).map(([name, value]) => ({ name, value }));
+  }, [items]);
+
   if (user && user.tipo_cargo !== 'Administrador') {
     return (
       <div className="space-y-6">
@@ -168,13 +192,33 @@ export default function HistorialPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Clock className="text-primary" size={28} />
+          <Activity className="text-primary" size={28} />
           <h1 className="text-3xl font-bold text-foreground">Historial de Movimientos</h1>
         </div>
         <p className="text-muted-foreground">
           Registro completo de todas las acciones del sistema. Solo visible para administradores.
         </p>
       </div>
+
+      {/* Chart Card */}
+      <Card className="border-border/40">
+        <CardHeader>
+          <CardTitle>Estadísticas de Acciones</CardTitle>
+          <CardDescription>Distribución de acciones registradas en el sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#0088FE" name="Cantidad" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Main Card */}
       <Card className="border-border/40">

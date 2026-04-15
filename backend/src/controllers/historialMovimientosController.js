@@ -2,12 +2,23 @@ const HistorialMovimientosService = require('../services/historialMovimientosSer
 
 const getAllHistorial = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const historialService = new HistorialMovimientosService(req.app.get('db'));
         const historial = await historialService.getAllHistorial();
-        res.status(200).json(Array.isArray(historial) ? historial : []);
+        
+        const filtered = historial.slice(offset, offset + limit);
+        res.status(200).json({
+            data: Array.isArray(filtered) ? filtered : [],
+            total: historial.length,
+            page,
+            limit
+        });
     } catch (err) {
         console.error('getAllHistorial error:', err);
-        res.status(200).json([]);
+        res.status(200).json({ data: [], total: 0, page: 1, limit: 20 });
     }
 };
 

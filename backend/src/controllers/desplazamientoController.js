@@ -2,12 +2,23 @@ const DesplazamientoService = require('../services/desplazamientoService');
 
 const getAllDesplazamientos = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
         const desplazamientos = await desplazamientoService.getAllDesplazamientos(req.user.id);
-        res.status(200).json(Array.isArray(desplazamientos) ? desplazamientos : []);
+        
+        const filtered = desplazamientos.slice(offset, offset + limit);
+        res.status(200).json({
+            data: Array.isArray(filtered) ? filtered : [],
+            total: desplazamientos.length,
+            page,
+            limit
+        });
     } catch (err) {
         console.error('getAllDesplazamientos error:', err);
-        res.status(200).json([]);
+        res.status(200).json({ data: [], total: 0, page: 1, limit: 10 });
     }
 };
 

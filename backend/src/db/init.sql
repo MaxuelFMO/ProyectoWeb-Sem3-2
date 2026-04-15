@@ -111,19 +111,19 @@ ALTER TABLE Desplazamiento ADD COLUMN IF NOT EXISTS id_persona_destino INT;
 ALTER TABLE Desplazamiento ADD COLUMN IF NOT EXISTS razon VARCHAR(255);
 
 -- Datos de ejemplo
-INSERT INTO
+INSERT IGNORE INTO
     TipoDocumento (nombre)
 VALUES
     ('DNI'),
     ('Pasaporte');
 
-INSERT INTO
+INSERT IGNORE INTO
     TipoCargo (nombre)
 VALUES
     ('Administrador'),
     ('Usuario');
 
-INSERT INTO
+INSERT IGNORE INTO
     TipoBien (nombre)
 VALUES
     ('Electrónico'),
@@ -137,7 +137,7 @@ VALUES
     ('Joyería'),
     ('Otros');
 
-INSERT INTO
+INSERT IGNORE INTO
     MotivoDesplazamiento (nombre)
 VALUES
     ('Cambio de residencia'),
@@ -147,10 +147,11 @@ VALUES
     ('Trabajo'),
     ('Otros');
 
-INSERT INTO
+INSERT IGNORE INTO
     EstadoDesplazamiento (nombre)
 VALUES
     ('Rechazado'),
+    ('Cancelado'),
     ('En Proceso'),
     ('Completado');
 

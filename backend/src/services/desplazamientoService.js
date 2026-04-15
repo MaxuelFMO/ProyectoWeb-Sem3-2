@@ -87,7 +87,7 @@ class DesplazamientoService {
 
         const [result] = await this.db.execute(
             'INSERT INTO Desplazamiento (fecha_inicio, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)',
-            [id_motivo, 2, userId, id_persona_destino, motivoNombre]
+            [id_motivo, 3, userId, id_persona_destino, motivoNombre]
         );
 
         const desplazamientoId = result.insertId;
