@@ -2,6 +2,9 @@
 
 El siguiente proyecto muestro una simulación sobre un sistema de gestión bienes patrimoniales.
 
+> [!Note]
+> Antes de ejecutar los siguientes comandos, asegurese de que este activo la base de datos MySQL en el puerto 3306.
+
 ```bash
 # Ejecutar los siguientes comandos para levantar todos los servicios
 # Ojo en automatico se crea y carga la DB
@@ -11,3 +14,5 @@ npm run dev
 ```
 
 Ahora puedes acceder al app desde http://localhost:5173.
+
+Enlace al video demostrativo: https://youtu.be/N0ij0VXlaKo
