@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePersons, type Person } from '@/hooks/use-persons';
+import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/components/providers/toast-provider';
 import { Spinner } from '@/components/ui/spinner';
 import { Search, Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
@@ -21,6 +22,8 @@ export default function PersonasPage() {
   const [showForm, setShowForm] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
+  const { user } = useAuth();
+  const isAdmin = user?.id_tipo_cargo === 1;
   const { getPersons, deletePerson } = usePersons();
   const { addToast } = useToast();
 
@@ -100,13 +103,15 @@ export default function PersonasPage() {
                 {total} registros en total
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setShowForm(true)}
-              className="w-full sm:w-auto gap-2 bg-primary hover:bg-orange-700"
-            >
-              <Plus size={18} />
-              Nueva persona
-            </Button>
+            {isAdmin && (
+              <Button
+                onClick={() => setShowForm(true)}
+                className="w-full sm:w-auto gap-2 bg-primary hover:bg-orange-700"
+              >
+                <Plus size={18} />
+                Nueva persona
+              </Button>
+            )}
           </div>
         </CardHeader>
 
@@ -137,13 +142,15 @@ export default function PersonasPage() {
               <div className="p-12 text-center">
                 <Users size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-muted-foreground mb-3">No hay personas registradas</p>
-                <Button
-                  onClick={() => setShowForm(true)}
-                  variant="outline"
-                  className="border-primary/50 text-primary hover:bg-primary/10"
-                >
-                  Crear la primera persona
-                </Button>
+                {isAdmin && (
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    variant="outline"
+                    className="border-primary/50 text-primary hover:bg-primary/10"
+                  >
+                    Crear la primera persona
+                  </Button>
+                )}
               </div>
             ) : (
               <>
@@ -188,23 +195,29 @@ export default function PersonasPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right space-x-1">
-                            <button
-                              onClick={() => {
-                                setSelectedPerson(persona);
-                                setShowForm(true);
-                              }}
-                              className="inline-flex items-center justify-center p-2 hover:bg-accent/15 text-accent rounded-md transition-colors"
-                              title="Editar"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(persona.id_persona)}
-                              className="inline-flex items-center justify-center p-2 hover:bg-destructive/15 text-destructive rounded-md transition-colors"
-                              title="Eliminar"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {isAdmin ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setSelectedPerson(persona);
+                                    setShowForm(true);
+                                  }}
+                                  className="inline-flex items-center justify-center p-2 hover:bg-accent/15 text-accent rounded-md transition-colors"
+                                  title="Editar"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(persona.id_persona)}
+                                  className="inline-flex items-center justify-center p-2 hover:bg-destructive/15 text-destructive rounded-md transition-colors"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Solo lectura</span>
+                            )}
                           </td>
                         </tr>
                       ))}

@@ -34,7 +34,7 @@ class AuthService {
 
     async login(email, password) {
         const [users] = await this.db.query(
-            'SELECT id_persona as id_persona, nombres, apellidos, correo, password_hash FROM Personas WHERE correo = ? AND estado = TRUE',
+            'SELECT p.id_persona as id_persona, p.nombres, p.apellidos, p.correo, p.password_hash, p.id_tipo_cargo, tc.nombre AS tipo_cargo FROM Personas p LEFT JOIN TipoCargo tc ON p.id_tipo_cargo = tc.id_tipo_cargo WHERE p.correo = ? AND p.estado = TRUE',
             [email]
         );
 
@@ -63,13 +63,15 @@ class AuthService {
                 nombres: user.nombres,
                 apellidos: user.apellidos,
                 correo: user.correo,
+                id_tipo_cargo: user.id_tipo_cargo,
+                tipo_cargo: user.tipo_cargo,
             },
         };
     }
 
     async getCurrentUser(userId) {
         const [users] = await this.db.query(
-            'SELECT id_persona, nombres, apellidos, correo, fecha_nacimiento, direccion, estado FROM Personas WHERE id_persona = ?',
+            'SELECT p.id_persona, p.nombres, p.apellidos, p.correo, p.fecha_nacimiento, p.direccion, p.estado, p.id_tipo_cargo, tc.nombre AS tipo_cargo FROM Personas p LEFT JOIN TipoCargo tc ON p.id_tipo_cargo = tc.id_tipo_cargo WHERE p.id_persona = ?',
             [userId]
         );
 

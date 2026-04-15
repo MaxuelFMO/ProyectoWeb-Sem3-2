@@ -62,6 +62,35 @@ export class APIClient {
     });
   }
 
+  static postForm<T>(endpoint: string, formData: FormData) {
+    const token = this.getToken();
+    const headers: Record<string, string> = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    return fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    }).then(async (response) => {
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          window.location.href = '/auth/login';
+        }
+        throw new Error('Sesión no autorizada');
+      }
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `API error: ${response.statusText}`);
+      }
+
+      return response.json();
+    });
+  }
+
   static delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }

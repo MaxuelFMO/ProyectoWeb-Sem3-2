@@ -7,6 +7,8 @@ export interface User {
   nombres: string;
   apellidos: string;
   correo?: string;
+  id_tipo_cargo?: number;
+  tipo_cargo?: string;
 }
 
 interface AuthContextType {

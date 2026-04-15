@@ -18,8 +18,8 @@ const seedDatabase = async (db) => {
 
         // Insertar usuario demo
         await db.query(
-            'INSERT INTO Personas (nombres, apellidos, correo, password_hash, estado) VALUES (?, ?, ?, ?, TRUE)',
-            ['demo', 'Usuario de Demostración', 'demo@local.com', hashedPassword]
+            'INSERT INTO Personas (nombres, apellidos, correo, id_tipo_cargo, password_hash, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
+            ['demo', 'Usuario de Demostración', 'demo@local.com', 1, hashedPassword]
         );
 
         console.log('✓ Usuario demo creado: usuario=demo, contraseña=demo');

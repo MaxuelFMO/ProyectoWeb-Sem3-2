@@ -36,7 +36,8 @@ function createPool() {
         multipleStatements: true,
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
+        decimalNumbers: true,
     });
 }
 
@@ -85,6 +86,7 @@ const desplazamientoRoutes = require('./routes/desplazamientoRoutes');
 const bienRoutes = require('./routes/bienRoutes');
 const historialMovimientosRoutes = require('./routes/historialMovimientosRoutes');
 const authRoutes = require('./routes/authRoutes');
+const catalogRoutes = require('./routes/catalogRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -92,6 +94,7 @@ app.use('/api/personas', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/desplazamientos', desplazamientoRoutes);
 app.use('/api/bienes', bienRoutes);
+app.use('/api', catalogRoutes);
 app.use('/api/historial', historialMovimientosRoutes);
 
 app.get('/', (req, res) => {

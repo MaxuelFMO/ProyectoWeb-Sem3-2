@@ -31,14 +31,19 @@ class UserModel {
             nombres,
             apellidos = '',
             correo,
+            id_tipo_cargo,
+            id_tipo_documento = null,
+            numero_documento = null,
             fecha_nacimiento = null,
-            direccion = '',
+            direccion = null,
             password_hash,
         } = user;
 
+        const formattedDireccion = typeof direccion === 'string' && direccion.trim() ? direccion.trim() : null;
+
         const [result] = await this.db.query(
-            'INSERT INTO Personas (nombres, apellidos, correo, fecha_nacimiento, direccion, password_hash, estado) VALUES (?, ?, ?, ?, ?, ?, TRUE)',
-            [nombres, apellidos, correo, fecha_nacimiento, direccion, password_hash]
+            'INSERT INTO Personas (nombres, apellidos, correo, id_tipo_cargo, id_tipo_documento, numero_documento, fecha_nacimiento, direccion, password_hash, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)',
+            [nombres, apellidos, correo, id_tipo_cargo, id_tipo_documento, numero_documento, fecha_nacimiento, formattedDireccion, password_hash]
         );
         return result.insertId;
     }
@@ -48,14 +53,19 @@ class UserModel {
             nombres = '',
             apellidos = '',
             correo = null,
+            id_tipo_cargo = null,
+            id_tipo_documento = null,
+            numero_documento = null,
             fecha_nacimiento = null,
-            direccion = '',
+            direccion = null,
             password_hash = null,
         } = user;
 
+        const formattedDireccion = typeof direccion === 'string' && direccion.trim() ? direccion.trim() : null;
+
         await this.db.query(
-            'UPDATE Personas SET nombres = ?, apellidos = ?, correo = COALESCE(?, correo), fecha_nacimiento = ?, direccion = ?, password_hash = COALESCE(?, password_hash) WHERE id_persona = ?',
-            [nombres, apellidos, correo, fecha_nacimiento, direccion, password_hash, id]
+            'UPDATE Personas SET nombres = ?, apellidos = ?, correo = COALESCE(?, correo), id_tipo_cargo = COALESCE(?, id_tipo_cargo), id_tipo_documento = ?, numero_documento = ?, fecha_nacimiento = ?, direccion = ?, password_hash = COALESCE(?, password_hash) WHERE id_persona = ?',
+            [nombres, apellidos, correo, id_tipo_cargo, id_tipo_documento, numero_documento, fecha_nacimiento, formattedDireccion, password_hash, id]
         );
         return true;
     }

@@ -12,14 +12,29 @@ interface PersonFormProps {
   onSuccess: () => void;
 }
 
+const userTypes = [
+  { id: 1, label: 'Administrador' },
+  { id: 2, label: 'Usuario' },
+];
+
+const documentTypes = [
+  { id: null, label: 'Sin documento' },
+  { id: 1, label: 'DNI' },
+  { id: 2, label: 'Pasaporte' },
+];
+
 export default function PersonForm({ person, onClose, onSuccess }: PersonFormProps) {
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
     correo: '',
+    id_tipo_cargo: 2,
+    id_tipo_documento: null as number | null,
+    numero_documento: '',
     fecha_nacimiento: '',
     direccion: '',
     password: '',
+    confirmPassword: '',
     estado: true,
   });
   const [loading, setLoading] = useState(false);
@@ -33,10 +48,14 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
       setFormData({
         nombres: person.nombres,
         apellidos: person.apellidos,
-        correo: person.correo || '',
-        fecha_nacimiento: person.fecha_nacimiento || '',
-        direccion: person.direccion || '',
+        correo: person.correo ?? '',
+        id_tipo_cargo: person.id_tipo_cargo ?? 2,
+        id_tipo_documento: person.id_tipo_documento ?? null,
+        numero_documento: person.numero_documento ?? '',
+        fecha_nacimiento: person.fecha_nacimiento ?? '',
+        direccion: person.direccion ?? '',
         password: '',
+        confirmPassword: '',
         estado: person.estado,
       });
     }
@@ -54,8 +73,29 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
     if (!formData.correo.trim()) {
       newErrors.correo = 'El correo es requerido';
     }
+    if (formData.password && formData.password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
     if (!person && !formData.password) {
       newErrors.password = 'La contraseña es requerida para nueva persona';
+    }
+    if (formData.id_tipo_documento !== null) {
+      if (!formData.numero_documento.trim()) {
+        newErrors.numero_documento = 'El número de documento es requerido';
+      } else {
+        const value = formData.numero_documento.trim();
+        if (formData.id_tipo_documento === 1 && !/^\d{8}$/.test(value)) {
+          newErrors.numero_documento = 'El DNI debe tener 8 dígitos';
+        }
+        if (formData.id_tipo_documento === 2 && !/^[A-Za-z0-9]{6,10}$/.test(value)) {
+          newErrors.numero_documento = 'El pasaporte debe tener entre 6 y 10 caracteres alfanuméricos';
+        }
+      }
+    } else if (formData.numero_documento.trim()) {
+      newErrors.id_tipo_documento = 'Selecciona el tipo de documento';
     }
 
     setErrors(newErrors);
@@ -72,25 +112,27 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
 
     setLoading(true);
     try {
+      const payload = {
+        nombres: formData.nombres.trim(),
+        apellidos: formData.apellidos.trim(),
+        correo: formData.correo.trim(),
+        id_tipo_cargo: formData.id_tipo_cargo,
+        id_tipo_documento: formData.id_tipo_documento ?? null,
+        numero_documento: formData.numero_documento.trim() ? formData.numero_documento.trim() : null,
+        fecha_nacimiento: formData.fecha_nacimiento || null,
+        direccion: formData.direccion.trim() ? formData.direccion.trim() : null,
+        estado: formData.estado,
+      } as any;
+
       if (person) {
-        await updatePerson(person.id_persona, {
-          nombres: formData.nombres,
-          apellidos: formData.apellidos,
-          correo: formData.correo,
-          fecha_nacimiento: formData.fecha_nacimiento,
-          direccion: formData.direccion,
-          estado: formData.estado,
-        } as any);
+        if (formData.password) {
+          payload.password = formData.password;
+        }
+        await updatePerson(person.id_persona, payload);
         addToast('Persona actualizada exitosamente', 'success');
       } else {
-        await createPerson({
-          nombres: formData.nombres,
-          apellidos: formData.apellidos,
-          correo: formData.correo,
-          fecha_nacimiento: formData.fecha_nacimiento,
-          direccion: formData.direccion,
-          password: formData.password,
-        } as any);
+        payload.password = formData.password;
+        await createPerson(payload);
         addToast('Persona creada exitosamente', 'success');
       }
       onSuccess();
@@ -186,6 +228,77 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
             )}
           </div>
 
+          {/* Tipo de usuario */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Tipo de usuario
+            </label>
+            <select
+              value={formData.id_tipo_cargo}
+              onChange={(e) =>
+                setFormData({ ...formData, id_tipo_cargo: Number(e.target.value) })
+              }
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              disabled={loading}
+            >
+              {userTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tipo de documento */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Tipo de documento
+            </label>
+            <select
+              value={formData.id_tipo_documento ?? ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  id_tipo_documento:
+                    e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              disabled={loading}
+            >
+              {documentTypes.map((doc) => (
+                <option key={doc.id ?? 'none'} value={doc.id ?? ''}>
+                  {doc.label}
+                </option>
+              ))}
+            </select>
+            {errors.id_tipo_documento && (
+              <p className="text-xs text-red-600 mt-1">{errors.id_tipo_documento}</p>
+            )}
+          </div>
+
+          {/* Documento */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Número de documento
+            </label>
+            <input
+              type="text"
+              value={formData.numero_documento || ''}
+              onChange={(e) =>
+                setFormData({ ...formData, numero_documento: e.target.value })
+              }
+              className={`w-full px-4 py-2 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                errors.numero_documento ? 'border-red-600 focus:ring-red-600' : 'border-border focus:ring-primary'
+              }`}
+              placeholder="Ingrese el número de documento"
+              disabled={loading}
+            />
+            {errors.numero_documento && (
+              <p className="text-xs text-red-600 mt-1">{errors.numero_documento}</p>
+            )}
+          </div>
+
           {/* Fecha de Nacimiento */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
@@ -221,25 +334,47 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
 
           {/* Password - Solo para nuevas personas */}
           {!person && (
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Contraseña *
-              </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className={`w-full px-4 py-2 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
-                  errors.password ? 'border-red-600 focus:ring-red-600' : 'border-border focus:ring-primary'
-                }`}
-                placeholder="••••••••"
-                disabled={loading}
-              />
-              {errors.password && (
-                <p className="text-xs text-red-600 mt-1">{errors.password}</p>
-              )}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Contraseña *
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className={`w-full px-4 py-2 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                    errors.password ? 'border-red-600 focus:ring-red-600' : 'border-border focus:ring-primary'
+                  }`}
+                  placeholder="••••••••"
+                  disabled={loading}
+                />
+                {errors.password && (
+                  <p className="text-xs text-red-600 mt-1">{errors.password}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Confirmar contraseña
+                </label>
+                <input
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    setFormData({ ...formData, confirmPassword: e.target.value })
+                  }
+                  className={`w-full px-4 py-2 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                    errors.confirmPassword ? 'border-red-600 focus:ring-red-600' : 'border-border focus:ring-primary'
+                  }`}
+                  placeholder="••••••••"
+                  disabled={loading}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-600 mt-1">{errors.confirmPassword}</p>
+                )}
+              </div>
             </div>
           )}
 

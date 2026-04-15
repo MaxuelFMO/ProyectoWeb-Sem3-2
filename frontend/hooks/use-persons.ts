@@ -8,6 +8,10 @@ export interface Person {
   nombres: string;
   apellidos: string;
   correo?: string;
+  id_tipo_cargo?: number;
+  tipo_cargo?: string;
+  id_tipo_documento?: number | null;
+  numero_documento?: string | null;
   fecha_nacimiento?: string;
   direccion?: string;
   estado: boolean;
@@ -39,7 +43,15 @@ export function usePersons() {
       if (params?.limit) query.append('limit', params.limit.toString());
 
       const endpoint = `/personas${query.toString() ? '?' + query.toString() : ''}`;
-      const data = await APIClient.get<PersonsResponse>(endpoint);
+      const data = await APIClient.get<PersonsResponse | Person[]>(endpoint);
+      if (Array.isArray(data)) {
+        return {
+          data,
+          total: data.length,
+          page: params?.page ?? 1,
+          limit: params?.limit ?? data.length,
+        };
+      }
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error fetching persons';
