@@ -5,11 +5,18 @@ CREATE TABLE
     );
 
 CREATE TABLE
+    IF NOT EXISTS TipoCargo (
+        id_tipo_cargo INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL
+    );
+
+CREATE TABLE
     IF NOT EXISTS Personas (
         id_persona INT AUTO_INCREMENT PRIMARY KEY,
         nombres VARCHAR(100) NOT NULL,
         apellidos VARCHAR(100) NOT NULL,
         correo VARCHAR(100) NOT NULL,
+        id_tipo_cargo INT NOT NULL,
         fecha_nacimiento DATE,
         direccion VARCHAR(255),
         password_hash VARCHAR(255) NOT NULL,
@@ -17,7 +24,8 @@ CREATE TABLE
         fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
         id_tipo_documento INT,
         numero_documento VARCHAR(20),
-        CONSTRAINT fk_id_tipo_documento FOREIGN KEY (id_tipo_documento) REFERENCES TipoDocumento (id_tipo_documento) ON UPDATE CASCADE ON DELETE SET NULL
+        CONSTRAINT fk_id_tipo_documento FOREIGN KEY (id_tipo_documento) REFERENCES TipoDocumento (id_tipo_documento) ON UPDATE CASCADE ON DELETE SET NULL,
+        CONSTRAINT fk_id_tipo_cargo FOREIGN KEY (id_tipo_cargo) REFERENCES TipoCargo (id_tipo_cargo) ON UPDATE CASCADE ON DELETE RESTRICT
     );
 
 CREATE TABLE
@@ -29,13 +37,13 @@ CREATE TABLE
 CREATE TABLE
     IF NOT EXISTS MotivoDesplazamiento (
         id_motivo INT AUTO_INCREMENT PRIMARY KEY,
-        descripcion VARCHAR(150) NOT NULL
+        nombre VARCHAR(100) NOT NULL
     );
 
 CREATE TABLE
     IF NOT EXISTS EstadoDesplazamiento (
         id_estado INT AUTO_INCREMENT PRIMARY KEY,
-        descripcion VARCHAR(100) NOT NULL
+        nombre VARCHAR(100) NOT NULL
     );
 
 CREATE TABLE
@@ -45,9 +53,11 @@ CREATE TABLE
         descripcion VARCHAR(255),
         valor DECIMAL(10, 2),
         id_tipo_bien INT,
+        id_persona INT,
         estado BOOLEAN DEFAULT TRUE,
         fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_bien_tipo FOREIGN KEY (id_tipo_bien) REFERENCES TipoBien (id_tipo_bien) ON UPDATE CASCADE ON DELETE SET NULL
+        CONSTRAINT fk_bien_tipo FOREIGN KEY (id_tipo_bien) REFERENCES TipoBien (id_tipo_bien) ON UPDATE CASCADE ON DELETE SET NULL,
+        CONSTRAINT fk_bien_persona FOREIGN KEY (id_persona) REFERENCES Personas (id_persona) ON UPDATE CASCADE ON DELETE SET NULL
     );
 
 CREATE TABLE
@@ -57,9 +67,23 @@ CREATE TABLE
         fecha_fin DATETIME,
         id_motivo INT,
         id_estado INT,
+        id_persona_origen INT,
+        id_persona_destino INT,
+        razon VARCHAR(255),
         fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_desplazamiento_motivo FOREIGN KEY (id_motivo) REFERENCES MotivoDesplazamiento (id_motivo) ON UPDATE CASCADE ON DELETE SET NULL,
-        CONSTRAINT fk_desplazamiento_estado FOREIGN KEY (id_estado) REFERENCES EstadoDesplazamiento (id_estado) ON UPDATE CASCADE ON DELETE SET NULL
+        CONSTRAINT fk_desplazamiento_estado FOREIGN KEY (id_estado) REFERENCES EstadoDesplazamiento (id_estado) ON UPDATE CASCADE ON DELETE SET NULL,
+        CONSTRAINT fk_desplazamiento_origen FOREIGN KEY (id_persona_origen) REFERENCES Personas (id_persona) ON UPDATE CASCADE ON DELETE SET NULL,
+        CONSTRAINT fk_desplazamiento_destino FOREIGN KEY (id_persona_destino) REFERENCES Personas (id_persona) ON UPDATE CASCADE ON DELETE SET NULL
+    );
+
+CREATE TABLE
+    IF NOT EXISTS DesplazamientoBien (
+        id_desplazamiento_bien INT AUTO_INCREMENT PRIMARY KEY,
+        id_desplazamiento INT NOT NULL,
+        id_bien INT NOT NULL,
+        CONSTRAINT fk_desplazamientobien_desplazamiento FOREIGN KEY (id_desplazamiento) REFERENCES Desplazamiento (id_desplazamiento) ON UPDATE CASCADE ON DELETE CASCADE,
+        CONSTRAINT fk_desplazamientobien_bien FOREIGN KEY (id_bien) REFERENCES Bien (id_bien) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
 CREATE TABLE
@@ -75,14 +99,31 @@ CREATE TABLE
         CONSTRAINT fk_historial_desplazamiento FOREIGN KEY (id_desplazamiento) REFERENCES Desplazamiento (id_desplazamiento) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
+ALTER TABLE TipoDocumento ADD UNIQUE (nombre);
+ALTER TABLE TipoCargo ADD UNIQUE (nombre);
+ALTER TABLE TipoBien ADD UNIQUE (nombre);
+ALTER TABLE MotivoDesplazamiento ADD UNIQUE (nombre);
+ALTER TABLE EstadoDesplazamiento ADD UNIQUE (nombre);
+
+ALTER TABLE Bien ADD COLUMN IF NOT EXISTS id_persona INT;
+ALTER TABLE Desplazamiento ADD COLUMN IF NOT EXISTS id_persona_origen INT;
+ALTER TABLE Desplazamiento ADD COLUMN IF NOT EXISTS id_persona_destino INT;
+ALTER TABLE Desplazamiento ADD COLUMN IF NOT EXISTS razon VARCHAR(255);
+
 -- Datos de ejemplo
-INSERT INTO
+INSERT IGNORE INTO
     TipoDocumento (nombre)
 VALUES
     ('DNI'),
     ('Pasaporte');
 
-INSERT INTO
+INSERT IGNORE INTO
+    TipoCargo (nombre)
+VALUES
+    ('Administrador'),
+    ('Usuario');
+
+INSERT IGNORE INTO
     TipoBien (nombre)
 VALUES
     ('Electrónico'),
@@ -96,8 +137,8 @@ VALUES
     ('Joyería'),
     ('Otros');
 
-INSERT INTO
-    MotivoDesplazamiento (descripcion)
+INSERT IGNORE INTO
+    MotivoDesplazamiento (nombre)
 VALUES
     ('Cambio de residencia'),
     ('Donativo'),
@@ -106,12 +147,11 @@ VALUES
     ('Trabajo'),
     ('Otros');
 
-INSERT INTO
-    EstadoDesplazamiento (descripcion)
+INSERT IGNORE INTO
+    EstadoDesplazamiento (nombre)
 VALUES
-    ('Pendiente'),
-    ('Aprobado'),
     ('Rechazado'),
+    ('Cancelado'),
     ('En Proceso'),
     ('Completado');
 

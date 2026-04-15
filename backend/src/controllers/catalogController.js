@@ -5,7 +5,7 @@ const getMotivos = async (req, res) => {
         res.status(200).json({ data: mapped });
     } catch (err) {
         console.error('getMotivos error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(200).json({ data: [] });
     }
 };
 
@@ -16,7 +16,7 @@ const getEstados = async (req, res) => {
         res.status(200).json({ data: mapped });
     } catch (err) {
         console.error('getEstados error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(200).json({ data: [] });
     }
 };
 
@@ -27,7 +27,7 @@ const getTiposDocumento = async (req, res) => {
         res.status(200).json({ data: mapped });
     } catch (err) {
         console.error('getTiposDocumento error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(200).json({ data: [] });
     }
 };
 
@@ -38,7 +38,7 @@ const getTiposCargo = async (req, res) => {
         res.status(200).json({ data: mapped });
     } catch (err) {
         console.error('getTiposCargo error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(200).json({ data: [] });
     }
 };
 

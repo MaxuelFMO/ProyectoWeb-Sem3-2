@@ -1,13 +1,11 @@
 const express = require('express');
-const { verifyToken } = require('../middleware/authMiddleware');
 const router = express.Router();
 const catalogController = require('../controllers/catalogController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-router.use(verifyToken);
-
-router.get('/motivos', catalogController.getMotivos);
-router.get('/estados', catalogController.getEstados);
-router.get('/tipos-documento', catalogController.getTiposDocumento);
-router.get('/tipos-cargo', catalogController.getTiposCargo);
+router.get('/motivos', verifyToken, catalogController.getMotivos);
+router.get('/estados', verifyToken, catalogController.getEstados);
+router.get('/tipos-documento', verifyToken, catalogController.getTiposDocumento);
+router.get('/tipos-cargo', verifyToken, catalogController.getTiposCargo);
 
 module.exports = router;

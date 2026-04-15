@@ -9,7 +9,7 @@ const getAllHistorial = async (req, res) => {
         const offset = (page - 1) * limit;
 
         const historialService = new HistorialMovimientosService(req.app.get('db'));
-        const isAdmin = req.user.id_tipo_cargo === 1; // 1 = Administrador
+        const isAdmin = req.user.id_tipo_cargo === 1;
         let historial;
         
         if (isAdmin) {
@@ -24,7 +24,7 @@ const getAllHistorial = async (req, res) => {
             historial = historial.filter(h => 
                 h.accion.toLowerCase().includes(search) || 
                 (h.descripcion && h.descripcion.toLowerCase().includes(search)) ||
-                (`${h.nombres} ${h.apellidos}`).toLowerCase().includes(search)
+                (`${h.nombres || ''} ${h.apellidos || ''}`).toLowerCase().includes(search)
             );
         }
 
@@ -45,17 +45,6 @@ const getAllHistorial = async (req, res) => {
     }
 };
 
-const getHistorialByPersona = async (req, res) => {
-    try {
-        const historialService = new HistorialMovimientosService(req.app.get('db'));
-        const historial = await historialService.getHistorialByPersona(req.params.id_persona);
-        res.status(200).json(Array.isArray(historial) ? historial : []);
-    } catch (err) {
-        console.error('getHistorialByPersona error:', err);
-        res.status(200).json([]);
-    }
-};
-
 const getHistorialById = async (req, res) => {
     try {
         const historialService = new HistorialMovimientosService(req.app.get('db'));
@@ -67,11 +56,24 @@ const getHistorialById = async (req, res) => {
     }
 };
 
+const getHistorialByPersona = async (req, res) => {
+    try {
+        const historialService = new HistorialMovimientosService(req.app.get('db'));
+        const historial = await historialService.getHistorialByPersona(req.params.id_persona);
+        res.status(200).json({ data: historial });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 const createHistorial = async (req, res) => {
     try {
         const historialService = new HistorialMovimientosService(req.app.get('db'));
-        const id = await historialService.createHistorial(req.body);
-        res.status(201).json({ id, ...req.body });
+        const id = await historialService.createHistorial({
+            ...req.body,
+            usuario_registro: req.user.correo
+        });
+        res.status(201).json({ id_historial: id });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -105,7 +107,7 @@ const exportHistorialPDF = async (req, res) => {
             historial = historial.filter(h => 
                 h.accion.toLowerCase().includes(search) || 
                 (h.descripcion && h.descripcion.toLowerCase().includes(search)) ||
-                (`${h.nombres} ${h.apellidos}`).toLowerCase().includes(search)
+                (`${h.nombres || ''} ${h.apellidos || ''}`).toLowerCase().includes(search)
             );
         }
 
@@ -121,7 +123,7 @@ const exportHistorialPDF = async (req, res) => {
         
         const tableData = historial.map(item => [
             new Date(item.fecha_hora).toLocaleString(),
-            `${item.nombres} ${item.apellidos}`,
+            `${item.nombres || ''} ${item.apellidos || ''}`.trim() || 'Sistema',
             item.accion,
             item.descripcion || '-'
         ]);
@@ -154,4 +156,11 @@ const exportHistorialPDF = async (req, res) => {
     }
 };
 
-module.exports = { getAllHistorial, getHistorialByPersona, getHistorialById, createHistorial, deleteHistorial, exportHistorialPDF };
+module.exports = { 
+    getAllHistorial, 
+    getHistorialById, 
+    getHistorialByPersona,
+    createHistorial,
+    deleteHistorial,
+    exportHistorialPDF 
+};

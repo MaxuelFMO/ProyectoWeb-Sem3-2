@@ -265,7 +265,7 @@ export default function BienesPage() {
   const handleCancelOutgoing = async (id: number) => {
     if (!confirm('¿Cancelar esta solicitud de traslado?')) return;
     try {
-      await APIClient.put(`/desplazamientos/${id}/cancel`);
+      await APIClient.put(`/desplazamientos/${id}`, { id_estado: 2 });
       addToast('Solicitud cancelada', 'success');
       loadIncoming();
     } catch (error) {
@@ -389,7 +389,7 @@ export default function BienesPage() {
                               </td>
                               <td className="px-4 py-3 font-medium text-foreground">{bien.nombre}</td>
                               {user?.id_tipo_cargo === 1 && (
-                                <td className="px-4 py-3 text-muted-foreground">{bien.owner_nombre || 'Sin asignar'}</td>
+                                <td className="px-4 py-3 text-muted-foreground">{(bien as any).owner_nombre || 'Sin asignar'}</td>
                               )}
                               <td className="px-4 py-3 text-muted-foreground">{bien.descripcion || '-'}</td>
                               <td className="px-4 py-3 text-muted-foreground">{bien.tipo_bien_nombre || '-'}</td>
@@ -519,7 +519,6 @@ export default function BienesPage() {
               try {
                 const token = APIClient.getToken();
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/bienes/template`, {
-                  method: 'GET',
                   headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                 });
                 if (!response.ok) {

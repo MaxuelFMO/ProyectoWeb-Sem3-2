@@ -5,9 +5,12 @@ class BienService {
 
     async getAllBienes(userId, isAdmin = false) {
         let query = `
-            SELECT b.*, tb.nombre as tipo_bien_nombre 
+            SELECT b.*, 
+                   tb.nombre as tipo_bien_nombre,
+                   CONCAT(p.nombres, ' ', p.apellidos) AS owner_nombre
             FROM Bien b 
             LEFT JOIN TipoBien tb ON b.id_tipo_bien = tb.id_tipo_bien
+            LEFT JOIN Personas p ON b.id_persona = p.id_persona
         `;
         let params = [];
         
@@ -15,6 +18,8 @@ class BienService {
             query += ' WHERE b.id_persona = ?';
             params.push(userId);
         }
+
+        query += ' ORDER BY b.fecha_registro DESC';
 
         const [rows] = await this.db.execute(query, params);
         return rows;

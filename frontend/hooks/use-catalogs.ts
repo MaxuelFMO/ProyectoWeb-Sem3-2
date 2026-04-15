@@ -40,8 +40,12 @@ export function useCatalogs() {
     setError(null);
     try {
       const data = await APIClient.get<CatalogsResponse<Motivo>>('/motivos');
-      setMotivos(data.data);
-      return data.data;
+      const mapped = data.data.map((item) => ({
+        id_motivo: item.id_motivo,
+        descripcion: (item as any).nombre || item.descripcion,
+      }));
+      setMotivos(mapped);
+      return mapped;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error fetching motivos';
       setError(message);
@@ -56,8 +60,12 @@ export function useCatalogs() {
     setError(null);
     try {
       const data = await APIClient.get<CatalogsResponse<Estado>>('/estados');
-      setEstados(data.data);
-      return data.data;
+      const mapped = data.data.map((item) => ({
+        id_estado: item.id_estado,
+        descripcion: (item as any).nombre || item.descripcion,
+      }));
+      setEstados(mapped);
+      return mapped;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error fetching estados';
       setError(message);

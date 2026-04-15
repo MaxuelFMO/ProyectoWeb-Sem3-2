@@ -35,8 +35,9 @@ export default function HistorialPage() {
     const loadUsers = async () => {
       if (user?.id_tipo_cargo !== 1) return;
       try {
-        const response = await APIClient.get<any[]>('/personas');
-        setUsers(Array.isArray(response) ? response : []);
+        const response = await APIClient.get<any>('/personas');
+        const data = response?.data || response;
+        setUsers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error cargando usuarios:', err);
       }
@@ -48,12 +49,14 @@ export default function HistorialPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getHistorial({
+      const params: any = {
         page: pageNum,
         limit,
-        id_persona: userId || undefined,
-        search: searchTerm || undefined
-      });
+      };
+      if (userId) params.id_persona = Number(userId);
+      if (searchTerm) params.search = searchTerm;
+
+      const res = await getHistorial(params);
       
       setMovimientos(Array.isArray(res.data) ? res.data : []);
       setTotal(typeof res.total === 'number' ? res.total : 0);
@@ -67,10 +70,11 @@ export default function HistorialPage() {
     }
   };
 
+  // Cargar cuando cambia el filtro de usuario o búsqueda
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadHistorial(1, filterUser, search);
-    }, 300);
+      loadHistorial(1, filterUser || undefined, search || undefined);
+    }, 500);
     return () => clearTimeout(timer);
   }, [search, filterUser]);
 
@@ -126,7 +130,7 @@ export default function HistorialPage() {
       return 'bg-blue-600/10 text-blue-600 border-blue-600/20';
     if (accion.includes('Eliminado') || accion.includes('Eliminada'))
       return 'bg-red-600/10 text-red-600 border-red-600/20';
-    if (accion.includes('Reporte') || accion.includes('Exportado'))
+    if (accion.includes('Reporte') || accion.includes('Exportado') || accion.includes('Generación') || accion.includes('Importación'))
       return 'bg-purple-600/10 text-purple-600 border-purple-600/20';
     return 'bg-gray-600/10 text-gray-600 border-gray-600/20';
   };
@@ -144,7 +148,7 @@ export default function HistorialPage() {
     movimientos.forEach((item) => {
       if (item.accion.includes('Creado') || item.accion.includes('Creada')) {
         stats['Creados']++;
-      } else if (item.accion.includes('Actualizado') || item.accion.includes('Actualizada')) {
+      } else if (item.accion.includes('Actualizado') || item.accion.includes('Actualizada') || item.accion.includes('Actualización')) {
         stats['Actualizados']++;
       } else if (item.accion.includes('Eliminado') || item.accion.includes('Eliminada')) {
         stats['Eliminados']++;
@@ -185,8 +189,8 @@ export default function HistorialPage() {
         </Button>
       </div>
 
-      {/* Chart Card - Only for Admins */}
-      {user?.id_tipo_cargo === 1 && movimientos.length > 0 && (
+      {/* Chart Card */}
+      {movimientos.length > 0 && (
         <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-lg">Distribución de Acciones</CardTitle>

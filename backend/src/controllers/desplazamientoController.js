@@ -13,6 +13,8 @@ const getAllDesplazamientos = async (req, res) => {
             id_persona: req.query.id_persona,
             id_motivo: req.query.id_motivo,
             id_estado: req.query.id_estado,
+            fecha_inicio: req.query.fecha_inicio,
+            fecha_fin: req.query.fecha_fin,
             search: req.query.search
         };
 
@@ -71,6 +73,28 @@ const updateDesplazamiento = async (req, res) => {
     }
 };
 
+// PUT /:id/status — Accept (4) or Reject (1)
+const updateDesplazamientoStatus = async (req, res) => {
+    try {
+        const desplazamientoService = new DesplazamientoService(req.app.get('db'));
+        await desplazamientoService.updateDesplazamiento(req.params.id, req.body, req.user.id);
+        res.status(200).json({ message: 'Estado actualizado' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// PUT /:id/cancel — Cancel (2)
+const cancelDesplazamiento = async (req, res) => {
+    try {
+        const desplazamientoService = new DesplazamientoService(req.app.get('db'));
+        await desplazamientoService.updateDesplazamiento(req.params.id, { id_estado: 2 }, req.user.id);
+        res.status(200).json({ message: 'Desplazamiento cancelado' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 const deleteDesplazamiento = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
@@ -81,4 +105,12 @@ const deleteDesplazamiento = async (req, res) => {
     }
 };
 
-module.exports = { getAllDesplazamientos, getDesplazamientoById, createDesplazamiento, updateDesplazamiento, deleteDesplazamiento };
+module.exports = { 
+    getAllDesplazamientos, 
+    getDesplazamientoById, 
+    createDesplazamiento, 
+    updateDesplazamiento,
+    updateDesplazamientoStatus,
+    cancelDesplazamiento, 
+    deleteDesplazamiento 
+};

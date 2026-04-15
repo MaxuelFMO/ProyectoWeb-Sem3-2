@@ -4,18 +4,16 @@ class DesplazamientoService {
     }
 
     async getAllDesplazamientos(userId, isAdmin = false, filters = {}) {
-        const { id_persona, id_motivo, id_estado, fecha_inicio, fecha_fin } = filters;
+        const { id_persona, id_motivo, id_estado, fecha_inicio, fecha_fin, search } = filters;
         let whereClauses = [];
         let params = [];
 
-        if (isAdmin) {
-            if (id_persona) {
-                whereClauses.push('(d.id_persona_origen = ? OR d.id_persona_destino = ?)');
-                params.push(id_persona, id_persona);
-            }
-        } else {
+        if (!isAdmin) {
             whereClauses.push('(d.id_persona_origen = ? OR d.id_persona_destino = ?)');
             params.push(userId, userId);
+        } else if (id_persona) {
+            whereClauses.push('(d.id_persona_origen = ? OR d.id_persona_destino = ?)');
+            params.push(id_persona, id_persona);
         }
 
         if (id_motivo) {
@@ -38,6 +36,12 @@ class DesplazamientoService {
             params.push(fecha_fin);
         }
 
+        if (search) {
+            whereClauses.push('(o.nombres LIKE ? OR r.nombres LIKE ? OR b.nombre LIKE ?)');
+            const searchParam = `%${search}%`;
+            params.push(searchParam, searchParam, searchParam);
+        }
+
         const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
         const query = `
@@ -49,9 +53,9 @@ class DesplazamientoService {
                 CONCAT(o.nombres, ' ', o.apellidos) AS origen_nombre,
                 r.id_persona AS destino_id,
                 CONCAT(r.nombres, ' ', r.apellidos) AS destino_nombre,
-                IFNULL(GROUP_CONCAT(b.nombre SEPARATOR ', '), 'Sin bienes') AS bienes_nombres,
-                GROUP_CONCAT(db.id_bien) AS bienes_ids,
-                IFNULL(SUM(b.valor), 0) AS valor_total
+                IFNULL(GROUP_CONCAT(DISTINCT b.nombre SEPARATOR ', '), 'Sin bienes') AS bienes_nombres,
+                GROUP_CONCAT(DISTINCT db.id_bien) AS bienes_ids,
+                IFNULL(SUM(DISTINCT b.valor), 0) AS valor_total
             FROM Desplazamiento d
             LEFT JOIN MotivoDesplazamiento m ON d.id_motivo = m.id_motivo
             LEFT JOIN EstadoDesplazamiento e ON d.id_estado = e.id_estado
@@ -60,7 +64,7 @@ class DesplazamientoService {
             LEFT JOIN DesplazamientoBien db ON d.id_desplazamiento = db.id_desplazamiento
             LEFT JOIN Bien b ON db.id_bien = b.id_bien
             ${whereClause}
-            GROUP BY d.id_desplazamiento, m.nombre, e.nombre, o.id_persona, r.id_persona
+            GROUP BY d.id_desplazamiento
             ORDER BY d.fecha_registro DESC
         `;
         const [rows] = await this.db.execute(query, params);
@@ -79,7 +83,7 @@ class DesplazamientoService {
                 CONCAT(r.nombres, ' ', r.apellidos) AS destino_nombre,
                 GROUP_CONCAT(b.nombre SEPARATOR ', ') AS bienes_nombres,
                 GROUP_CONCAT(db.id_bien) AS bienes_ids,
-                GROUP_CONCAT(b.valor SEPARATOR ', ') AS bienes_valores
+                IFNULL(SUM(b.valor), 0) AS valor_total
             FROM Desplazamiento d
             LEFT JOIN MotivoDesplazamiento m ON d.id_motivo = m.id_motivo
             LEFT JOIN EstadoDesplazamiento e ON d.id_estado = e.id_estado
@@ -87,10 +91,10 @@ class DesplazamientoService {
             LEFT JOIN Personas r ON d.id_persona_destino = r.id_persona
             LEFT JOIN DesplazamientoBien db ON d.id_desplazamiento = db.id_desplazamiento
             LEFT JOIN Bien b ON db.id_bien = b.id_bien
-            WHERE d.id_desplazamiento = ? AND (d.id_persona_origen = ? OR d.id_persona_destino = ?)
+            WHERE d.id_desplazamiento = ?
             GROUP BY d.id_desplazamiento
         `;
-        const [rows] = await this.db.execute(query, [id, userId, userId]);
+        const [rows] = await this.db.execute(query, [id]);
         return rows[0] || null;
     }
 
@@ -99,12 +103,14 @@ class DesplazamientoService {
             id_persona_destino,
             id_motivo,
             bienes_ids = [],
+            razon = ''
         } = data;
 
         if (!id_persona_destino || !id_motivo || !Array.isArray(bienes_ids) || bienes_ids.length === 0) {
             throw new Error('Datos de desplazamiento incompletos');
         }
 
+        // Verificar propiedad de los bienes
         const placeholders = bienes_ids.map(() => '?').join(',');
         const [existingBienes] = await this.db.execute(
             `SELECT id_bien FROM Bien WHERE id_bien IN (${placeholders}) AND id_persona = ?`,
@@ -115,15 +121,9 @@ class DesplazamientoService {
             throw new Error('Algunos bienes no pertenecen al usuario o no existen');
         }
 
-        const motivoRows = await this.db.execute(
-            'SELECT nombre FROM MotivoDesplazamiento WHERE id_motivo = ?',
-            [id_motivo]
-        );
-        const motivoNombre = motivoRows[0]?.[0]?.nombre || null;
-
         const [result] = await this.db.execute(
             'INSERT INTO Desplazamiento (fecha_inicio, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)',
-            [id_motivo, 3, userId, id_persona_destino, data.razon || '']
+            [id_motivo, 3, userId, id_persona_destino, razon]
         );
 
         const desplazamientoId = result.insertId;
@@ -140,14 +140,13 @@ class DesplazamientoService {
     async updateDesplazamiento(id, data, userId) {
         const { id_estado } = data;
         
-        // Verificar si es admin
+        // Verificar roles
         const [userRoleRows] = await this.db.execute(
             'SELECT id_tipo_cargo FROM Personas WHERE id_persona = ?',
             [userId]
         );
         const isAdmin = userRoleRows[0]?.id_tipo_cargo === 1;
 
-        // Consultar el desplazamiento existente sin filtrar por usuario aún
         const [existingRows] = await this.db.execute(
             'SELECT * FROM Desplazamiento WHERE id_desplazamiento = ?',
             [id]
@@ -158,7 +157,7 @@ class DesplazamientoService {
             throw new Error('Desplazamiento no encontrado');
         }
 
-        // Determinar autorización
+        // Validar permisos de cambio de estado
         const isDestination = Number(existing.id_persona_destino) === Number(userId);
         const isOrigin = Number(existing.id_persona_origen) === Number(userId);
 
@@ -172,12 +171,9 @@ class DesplazamientoService {
             }
         }
 
-        if (![1, 2, 4].includes(Number(id_estado))) {
-            throw new Error('Estado no válido');
-        }
-
         await this.db.execute('UPDATE Desplazamiento SET id_estado = ? WHERE id_desplazamiento = ?', [id_estado, id]);
 
+        // INTEGRACIÓN: Si se completa, transferir propiedad de los bienes
         if (Number(id_estado) === 4) {
             const [bienesRows] = await this.db.execute('SELECT id_bien FROM DesplazamientoBien WHERE id_desplazamiento = ?', [id]);
             const bienesIds = bienesRows.map((row) => row.id_bien);
@@ -198,7 +194,7 @@ class DesplazamientoService {
         );
 
         if (!existingRows || existingRows.length === 0) {
-            throw new Error('No autorizado o desplazamiento no puede eliminarse');
+            throw new Error('No autorizado o el desplazamiento no está en estado cancelado');
         }
 
         await this.db.execute('DELETE FROM DesplazamientoBien WHERE id_desplazamiento = ?', [id]);
