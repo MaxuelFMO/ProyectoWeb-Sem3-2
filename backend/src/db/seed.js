@@ -4,7 +4,7 @@ const seedDatabase = async (db) => {
     try {
         // Verificar si el usuario demo ya existe
         const [existing] = await db.query(
-            'SELECT id_persona FROM users WHERE nombres = ?',
+            'SELECT id_persona FROM Personas WHERE nombres = ?',
             ['demo']
         );
 
@@ -18,7 +18,7 @@ const seedDatabase = async (db) => {
 
         // Insertar usuario demo
         await db.query(
-            'INSERT INTO users (nombres, apellidos, password_hash, estado) VALUES (?, ?, ?, TRUE)',
+            'INSERT INTO Personas (nombres, apellidos, password_hash, estado) VALUES (?, ?, ?, TRUE)',
             ['demo', 'Usuario de Demostración', hashedPassword]
         );
 

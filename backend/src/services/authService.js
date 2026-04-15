@@ -11,7 +11,7 @@ class AuthService {
         
         // Verificar si user existe
         const [existing] = await this.db.query(
-            'SELECT id_persona FROM users WHERE nombres = ?',
+            'SELECT id_persona FROM Personas WHERE nombres = ?',
             [name]
         );
         
@@ -24,7 +24,7 @@ class AuthService {
 
         // Crear user
         const [result] = await this.db.query(
-            'INSERT INTO users (nombres, apellidos, password_hash, estado) VALUES (?, ?, ?, TRUE)',
+            'INSERT INTO Personas (nombres, apellidos, password_hash, estado) VALUES (?, ?, ?, TRUE)',
             [name, apellidos || '', hashedPassword]
         );
 
@@ -34,7 +34,7 @@ class AuthService {
     async login(name, password) {
         // Buscar user
         const [users] = await this.db.query(
-            'SELECT id_persona as id, nombres as name, password_hash FROM users WHERE nombres = ? AND estado = TRUE',
+            'SELECT id_persona as id, nombres as name, password_hash FROM Personas WHERE nombres = ? AND estado = TRUE',
             [name]
         );
 
@@ -63,7 +63,7 @@ class AuthService {
 
     async getCurrentUser(userId) {
         const [users] = await this.db.query(
-            'SELECT id_persona as id, nombres as name, apellidos, fecha_nacimiento, direccion, estado FROM users WHERE id_persona = ?',
+            'SELECT id_persona as id, nombres as name, apellidos, fecha_nacimiento, direccion, estado FROM Personas WHERE id_persona = ?',
             [userId]
         );
 

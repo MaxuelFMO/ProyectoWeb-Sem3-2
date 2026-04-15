@@ -1,7 +1,9 @@
--- =====================================
--- TABLA: Persona (users)
--- =====================================
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS TipoDocumento (
+    id_tipo_documento INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Personas (
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -10,36 +12,29 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     estado BOOLEAN DEFAULT TRUE,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    id_tipo_documento INT
+    id_tipo_documento INT,
+
+    CONSTRAINT fk_id_tipo_documento
+        FOREIGN KEY (id_tipo_documento) REFERENCES TipoDocumento(id_tipo_documento)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
--- =====================================
--- TABLA: MotivoDesplazamiento
--- =====================================
-CREATE TABLE IF NOT EXISTS MotivoDesplazamiento (
-    id_motivo INT AUTO_INCREMENT PRIMARY KEY,
-    descripcion VARCHAR(150) NOT NULL
-);
-
--- =====================================
--- TABLA: EstadoDesplazamiento
--- =====================================
-CREATE TABLE IF NOT EXISTS EstadoDesplazamiento (
-    id_estado INT AUTO_INCREMENT PRIMARY KEY,
-    descripcion VARCHAR(100) NOT NULL
-);
-
--- =====================================
--- TABLA: TipoBien
--- =====================================
 CREATE TABLE IF NOT EXISTS TipoBien (
     id_tipo_bien INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL
 );
 
--- =====================================
--- TABLA: Bien
--- =====================================
+CREATE TABLE IF NOT EXISTS MotivoDesplazamiento (
+    id_motivo INT AUTO_INCREMENT PRIMARY KEY,
+    descripcion VARCHAR(150) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS EstadoDesplazamiento (
+    id_estado INT AUTO_INCREMENT PRIMARY KEY,
+    descripcion VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS Bien (
     id_bien INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
@@ -55,9 +50,6 @@ CREATE TABLE IF NOT EXISTS Bien (
         ON DELETE SET NULL
 );
 
--- =====================================
--- TABLA: Desplazamiento
--- =====================================
 CREATE TABLE IF NOT EXISTS Desplazamiento (
     id_desplazamiento INT AUTO_INCREMENT PRIMARY KEY,
     fecha_inicio DATETIME NOT NULL,
@@ -77,9 +69,6 @@ CREATE TABLE IF NOT EXISTS Desplazamiento (
         ON DELETE SET NULL
 );
 
--- =====================================
--- TABLA: HistorialMovimientos
--- =====================================
 CREATE TABLE IF NOT EXISTS HistorialMovimientos (
     id_historial INT AUTO_INCREMENT PRIMARY KEY,
     id_persona INT,
@@ -90,7 +79,7 @@ CREATE TABLE IF NOT EXISTS HistorialMovimientos (
     usuario_registro VARCHAR(100),
 
     CONSTRAINT fk_historial_persona
-        FOREIGN KEY (id_persona) REFERENCES users(id_persona)
+        FOREIGN KEY (id_persona) REFERENCES personas(id_persona)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -100,17 +89,14 @@ CREATE TABLE IF NOT EXISTS HistorialMovimientos (
         ON DELETE CASCADE
 );
 
--- =====================================
--- ÍNDICES
--- =====================================
-ALTER TABLE HistorialMovimientos
-ADD INDEX IF NOT EXISTS idx_historial_persona (id_persona);
+-- ALTER TABLE HistorialMovimientos
+-- ADD INDEX IF NOT EXISTS idx_historial_persona (id_persona);
 
-ALTER TABLE HistorialMovimientos
-ADD INDEX IF NOT EXISTS idx_historial_desplazamiento (id_desplazamiento);
+-- ALTER TABLE HistorialMovimientos
+-- ADD INDEX IF NOT EXISTS idx_historial_desplazamiento (id_desplazamiento);
 
-ALTER TABLE Desplazamiento
-ADD INDEX IF NOT EXISTS idx_desplazamiento_motivo (id_motivo);
+-- ALTER TABLE Desplazamiento
+-- ADD INDEX IF NOT EXISTS idx_desplazamiento_motivo (id_motivo);
 
-ALTER TABLE Desplazamiento
-ADD INDEX IF NOT EXISTS idx_desplazamiento_estado (id_estado);
+-- ALTER TABLE Desplazamiento
+-- ADD INDEX IF NOT EXISTS idx_desplazamiento_estado (id_estado);
