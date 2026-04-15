@@ -1,0 +1,26 @@
+{
+  "name": "proyectoweb-sem3-2",
+  "version": "1.0.0",
+  "description": "El siguiente proyecto muestro una simulación sobre un sistema de gestión bienes patrimoniales.",
+  "main": "index.js",
+  "scripts": {
+    "frontend": "cd frontend && npm install && npm run dev",
+    "backend": "cd backend && npm install && npm run dev",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaxuelFMO/ProyectoWeb-Sem3-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MaxuelFMO/ProyectoWeb-Sem3-2/issues"
+  },
+  "homepage": "https://github.com/MaxuelFMO/ProyectoWeb-Sem3-2#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -5,20 +5,20 @@ class ProductModel {
     }
 
     async findAll() {
-        const [rows] = await this.db.query('SELECT * FROM products');
+        const [rows] = await this.db.query('SELECT id_bien as id, nombre as name, descripcion as description, valor as price, estado as stock FROM Bien');
         return rows;
     }
 
     async findById(id) {
-        const [rows] = await this.db.query('SELECT * FROM products WHERE id = ?', [id]);
+        const [rows] = await this.db.query('SELECT id_bien as id, nombre as name, descripcion as description, valor as price, estado as stock FROM Bien WHERE id_bien = ?', [id]);
         return rows[0];
     }
 
     async create(product) {
-        const { name, description, price, stock } = product;
+        const { name, description, price } = product;
         const [result] = await this.db.query(
-            'INSERT INTO products (name, description, price, stock) VALUES (?, ?, ?, ?)',
-            [name, description, price, stock]
+            'INSERT INTO Bien (nombre, descripcion, valor, estado) VALUES (?, ?, ?, TRUE)',
+            [name, description, price]
         );
         return result.insertId;
     }
@@ -26,14 +26,14 @@ class ProductModel {
     async update(id, product) {
         const { name, description, price, stock } = product;
         await this.db.query(
-            'UPDATE products SET name = ?, description = ?, price = ?, stock = ? WHERE id = ?',
+            'UPDATE Bien SET nombre = ?, descripcion = ?, valor = ?, estado = ? WHERE id_bien = ?',
             [name, description, price, stock, id]
         );
         return true;
     }
 
     async delete(id) {
-        await this.db.query('DELETE FROM products WHERE id = ?', [id]);
+        await this.db.query('DELETE FROM Bien WHERE id_bien = ?', [id]);
         return true;
     }
 }
