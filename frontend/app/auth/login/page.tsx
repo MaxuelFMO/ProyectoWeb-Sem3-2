@@ -149,13 +149,13 @@ export default function LoginPage() {
             </button>
 
             {/* Demo Login Button */}
-            <button
+            {/* <button
               type="button"
               onClick={handleDemoLogin}
               className="w-full mt-3 bg-accent/20 hover:bg-accent/30 border border-accent text-accent py-2 px-4 rounded-lg font-semibold transition-colors"
             >
               Saltar a Dashboard (Demo)
-            </button>
+            </button> */}
           </form>
 
           {/* Footer */}
@@ -172,7 +172,7 @@ export default function LoginPage() {
         {/* Demo Info */}
         <div className="mt-8 p-4 bg-card border border-accent/30 rounded-lg text-sm text-muted-foreground text-center">
           <p className="font-semibold text-accent mb-1">Modo Desarrollo</p>
-          <p>Usa el botón "Saltar a Dashboard" para pruebas de frontend sin backend, o ingresa credenciales reales del servidor Express.</p>
+          <p>La cuenta de usuario por default para pruebas es <b className='text-accent'>demo@local.com</b> y la contraseña es <b className='text-accent'>demo</b>.</p>
         </div>
       </div>
     </div>

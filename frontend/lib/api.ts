@@ -1,5 +1,3 @@
-import { useAuth } from '@/contexts/auth-context';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export class APIClient {
@@ -15,13 +13,13 @@ export class APIClient {
     options: RequestInit = {}
   ): Promise<T> {
     const token = this.getToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> | undefined),
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -30,12 +28,12 @@ export class APIClient {
     });
 
     if (response.status === 401) {
-      // Token expirado o inválido
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
         window.location.href = '/auth/login';
       }
+      throw new Error('Sesión no autorizada');
     }
 
     if (!response.ok) {
@@ -71,8 +69,6 @@ export class APIClient {
 
 // Hook para usar en componentes del cliente
 export function useAPI() {
-  const { token } = useAuth();
-
   return {
     get: <T,>(endpoint: string) => APIClient.get<T>(endpoint),
     post: <T,>(endpoint: string, data?: Record<string, any>) =>

@@ -16,6 +16,7 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
+    correo: '',
     fecha_nacimiento: '',
     direccion: '',
     password: '',
@@ -32,6 +33,7 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
       setFormData({
         nombres: person.nombres,
         apellidos: person.apellidos,
+        correo: person.correo || '',
         fecha_nacimiento: person.fecha_nacimiento || '',
         direccion: person.direccion || '',
         password: '',
@@ -48,6 +50,9 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
     }
     if (!formData.apellidos.trim()) {
       newErrors.apellidos = 'El apellido es requerido';
+    }
+    if (!formData.correo.trim()) {
+      newErrors.correo = 'El correo es requerido';
     }
     if (!person && !formData.password) {
       newErrors.password = 'La contraseña es requerida para nueva persona';
@@ -71,6 +76,7 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
         await updatePerson(person.id_persona, {
           nombres: formData.nombres,
           apellidos: formData.apellidos,
+          correo: formData.correo,
           fecha_nacimiento: formData.fecha_nacimiento,
           direccion: formData.direccion,
           estado: formData.estado,
@@ -80,6 +86,7 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
         await createPerson({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
+          correo: formData.correo,
           fecha_nacimiento: formData.fecha_nacimiento,
           direccion: formData.direccion,
           password: formData.password,
@@ -154,6 +161,28 @@ export default function PersonForm({ person, onClose, onSuccess }: PersonFormPro
             />
             {errors.apellidos && (
               <p className="text-xs text-red-600 mt-1">{errors.apellidos}</p>
+            )}
+          </div>
+
+          {/* Correo */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Correo *
+            </label>
+            <input
+              type="email"
+              value={formData.correo}
+              onChange={(e) =>
+                setFormData({ ...formData, correo: e.target.value })
+              }
+              className={`w-full px-4 py-2 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                errors.correo ? 'border-red-600 focus:ring-red-600' : 'border-border focus:ring-primary'
+              }`}
+              placeholder="usuario@ejemplo.com"
+              disabled={loading}
+            />
+            {errors.correo && (
+              <p className="text-xs text-red-600 mt-1">{errors.correo}</p>
             )}
           </div>
 

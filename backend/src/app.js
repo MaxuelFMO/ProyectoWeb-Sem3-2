@@ -88,6 +88,7 @@ const authRoutes = require('./routes/authRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/personas', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/desplazamientos', desplazamientoRoutes);
 app.use('/api/bienes', bienRoutes);

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS Personas (
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) NOT NULL,
     fecha_nacimiento DATE,
     direccion VARCHAR(255),
     password_hash VARCHAR(255) NOT NULL,

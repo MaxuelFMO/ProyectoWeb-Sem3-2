@@ -1,6 +1,9 @@
 const express = require('express');
+const { verifyToken } = require('../middleware/authMiddleware');
 const router = express.Router();
 const historialController = require('../controllers/historialMovimientosController');
+
+router.use(verifyToken);
 
 router.get('/', historialController.getAllHistorial);
 router.get('/persona/:id_persona', historialController.getHistorialByPersona);

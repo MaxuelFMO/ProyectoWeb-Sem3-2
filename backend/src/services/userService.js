@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const UserModel = require('../models/userModel');
 
 class UserService {
@@ -14,11 +15,22 @@ class UserService {
     }
 
     async createUser(userData) {
-        // Business logic: check if email is valid, etc.
-        return await this.userModel.create(userData);
+        const { nombres, correo, password } = userData;
+
+        if (!nombres || !correo || !password) {
+            throw new Error('Nombres, correo y contraseña son requeridos');
+        }
+
+        const password_hash = await bcrypt.hash(password, 10);
+        return await this.userModel.create({ ...userData, password_hash });
     }
 
     async updateUser(id, userData) {
+        if (userData.password) {
+            userData.password_hash = await bcrypt.hash(userData.password, 10);
+            delete userData.password;
+        }
+
         return await this.userModel.update(id, userData);
     }
 

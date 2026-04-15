@@ -6,7 +6,7 @@ export interface User {
   id_persona: number;
   nombres: string;
   apellidos: string;
-  email?: string;
+  correo?: string;
 }
 
 interface AuthContextType {
@@ -29,20 +29,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Cargar token desde localStorage al montar el componente
   useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      setToken(storedToken);
-      // Opcionalmente, validar el token con el backend
-      const storedUser = localStorage.getItem('authUser');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('Error parsing stored user:', e);
-        }
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('authToken');
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
       }
-    }
-    setIsLoading(false);
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Token inválido');
+        }
+
+        const userData = await response.json();
+        setToken(storedToken);
+        setUser(userData);
+        localStorage.setItem('authUser', JSON.stringify(userData));
+      } catch (error) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -57,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Falló la autenticación');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Falló la autenticación');
       }
 
       const data = await response.json();
@@ -77,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id_persona: 999,
       nombres: 'Usuario',
       apellidos: 'Demostración',
-      email: 'demo@test.local',
+      correo: 'demo@test.local',
     };
     
     const demoToken = 'demo_token_' + Date.now();

@@ -12,15 +12,15 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { name, password } = req.body;
-        
-        if (!name || !password) {
-            return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Correo y contraseña requeridos' });
         }
 
         const authService = new AuthService(req.app.get('db'));
-        const { token, user } = await authService.login(name, password);
-        
+        const { token, user } = await authService.login(email, password);
+
         res.status(200).json({ token, user });
     } catch (err) {
         res.status(401).json({ error: err.message });

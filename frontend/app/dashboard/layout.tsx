@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { LogOut, Home, Users, Database, History, ChevronRight, BarChart3 } from 'lucide-react';
+import { LogOut, Home, Users, Database, History, ChevronRight, BarChart3, Settings } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +30,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Redirigir a login si no está autenticado
+  // Redirigir a home si no está autenticado
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/auth/login');
@@ -60,6 +60,7 @@ export default function DashboardLayout({
     { href: '/dashboard/personas', label: 'Personas', icon: Users },
     { href: '/dashboard/desplazamientos', label: 'Desplazamientos', icon: Database },
     { href: '/dashboard/historial', label: 'Historial', icon: History },
+    { href: '/dashboard/settings', label: 'Ajustes', icon: Settings },
   ];
 
   const isActive = (href: string) => {

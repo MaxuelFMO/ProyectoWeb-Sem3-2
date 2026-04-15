@@ -1,6 +1,9 @@
 const express = require('express');
+const { verifyToken } = require('../middleware/authMiddleware');
 const router = express.Router();
 const bienController = require('../controllers/bienController');
+
+router.use(verifyToken);
 
 router.get('/', bienController.getAllBienes);
 router.get('/:id', bienController.getBienById);

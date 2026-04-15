@@ -7,6 +7,7 @@ export interface Person {
   id_persona: number;
   nombres: string;
   apellidos: string;
+  correo?: string;
   fecha_nacimiento?: string;
   direccion?: string;
   estado: boolean;
