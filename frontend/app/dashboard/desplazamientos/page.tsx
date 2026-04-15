@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDisplacements, type Displacement } from '@/hooks/use-displacements';
+import { useAuth } from '@/contexts/auth-context';
 import { useCatalogs } from '@/hooks/use-catalogs';
 import { useToast } from '@/components/providers/toast-provider';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,12 +11,9 @@ import DisplacementForm from '@/components/domain/displacement-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-<<<<<<< Updated upstream
-=======
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { usePersons, type Person } from '@/hooks/use-persons';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
->>>>>>> Stashed changes
 
 export default function DesplazamientosPage() {
   const [desplazamientos, setDesplazamientos] = useState<Displacement[]>([]);
@@ -28,19 +26,15 @@ export default function DesplazamientosPage() {
   const [selectedDisplacement, setSelectedDisplacement] = useState<Displacement | null>(null);
   const [filterMotivo, setFilterMotivo] = useState<number | ''>('');
   const [filterEstado, setFilterEstado] = useState<number | ''>('');
-<<<<<<< Updated upstream
-
-  const { getDisplacements, deleteDisplacement } = useDisplacements();
-=======
   const [filterPersona, setFilterPersona] = useState<number | ''>('');
   const [persons, setPersons] = useState<Person[]>([]);
   const [globalStats, setGlobalStats] = useState<Record<string, number>>({});
   const [selectedDisplacementForModal, setSelectedDisplacementForModal] = useState<Displacement | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const { getDisplacements } = useDisplacements();
+  const { user } = useAuth();
+  const { getDisplacements, deleteDisplacement } = useDisplacements();
   const { getPersons } = usePersons();
->>>>>>> Stashed changes
   const { motivos, estados } = useCatalogs();
   const { addToast } = useToast();
 
@@ -126,8 +120,6 @@ export default function DesplazamientosPage() {
     return 'gray';
   };
 
-<<<<<<< Updated upstream
-=======
   const chartData = useMemo(() => {
     const states = ['Rechazado', 'Cancelado', 'En Proceso', 'Completado'];
     return states.map(name => ({
@@ -142,30 +134,19 @@ export default function DesplazamientosPage() {
     'En Proceso': '#0ea5e9',  // sky-500
     'Completado': '#10b981',  // emerald-500
   };
-
->>>>>>> Stashed changes
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <TrendingUp className="text-primary" size={28} />
-<<<<<<< Updated upstream
-          <h1 className="text-3xl font-bold text-foreground">Gestión de Desplazamientos</h1>
-        </div>
-        <p className="text-muted-foreground">
-          Registra y controla movimientos de bienes patrimoniales
-        </p>
-      </div>
-
-=======
           <h1 className="text-3xl font-bold text-foreground">
             {user?.id_tipo_cargo === 1 ? 'Gestión de Desplazamientos' : 'Mis Desplazamientos'}
           </h1>
         </div>
         <p className="text-muted-foreground">
-          {user?.id_tipo_cargo === 1 
-            ? 'Monitorea y gestiona todos los traslados de bienes en el sistema.' 
+          {user?.id_tipo_cargo === 1
+            ? 'Monitorea y gestiona todos los traslados de bienes en el sistema.'
             : 'Revisa tus solicitudes de traslado de bienes, tanto enviadas como recibidas.'}
         </p>
       </div>
@@ -192,7 +173,7 @@ export default function DesplazamientosPage() {
                   <Cell key={`cell-${index}`} fill={STATE_COLORS[entry.name] || '#94a3b8'} />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                 itemStyle={{ color: 'hsl(var(--foreground))' }}
               />
@@ -201,8 +182,6 @@ export default function DesplazamientosPage() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
->>>>>>> Stashed changes
       {/* Main Card */}
       <Card className="border-border/40">
         <CardHeader className="border-b border-border/40 pb-4">
@@ -345,14 +324,14 @@ export default function DesplazamientosPage() {
                           <td className="px-6 py-4">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium border ${getEstadoColor(disp.id_estado) === 'green'
-                                  ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
-                                  : getEstadoColor(disp.id_estado) === 'blue'
-                                    ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
-                                    : getEstadoColor(disp.id_estado) === 'amber'
-                                      ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
-                                      : getEstadoColor(disp.id_estado) === 'red'
-                                        ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
-                                        : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
+                                ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
+                                : getEstadoColor(disp.id_estado) === 'blue'
+                                  ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
+                                  : getEstadoColor(disp.id_estado) === 'amber'
+                                    ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
+                                    : getEstadoColor(disp.id_estado) === 'red'
+                                      ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
+                                      : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
                                 }`}
                             >
                               {getEstadoLabel(disp.id_estado)}
@@ -419,8 +398,8 @@ export default function DesplazamientosPage() {
                             )
                           }
                           className={`px-3 py-1 rounded-md text-sm transition-colors ${p === page
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted text-foreground'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-muted text-foreground'
                             }`}
                         >
                           {p}
@@ -449,16 +428,6 @@ export default function DesplazamientosPage() {
         </CardContent>
       </Card>
 
-<<<<<<< Updated upstream
-      {/* Form Modal */}
-      {showForm && (
-        <DisplacementForm
-          displacement={selectedDisplacement}
-          onClose={handleFormClose}
-          onSuccess={handleFormSuccess}
-        />
-      )}
-=======
       {/* Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="max-w-2xl">
@@ -528,14 +497,14 @@ export default function DesplazamientosPage() {
                   </p>
                   <span
                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getEstadoColor(selectedDisplacementForModal.id_estado) === 'green'
-                        ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
-                        : getEstadoColor(selectedDisplacementForModal.id_estado) === 'blue'
-                          ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
-                          : getEstadoColor(selectedDisplacementForModal.id_estado) === 'amber'
-                            ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
-                            : getEstadoColor(selectedDisplacementForModal.id_estado) === 'red'
-                              ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
-                              : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
+                      ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
+                      : getEstadoColor(selectedDisplacementForModal.id_estado) === 'blue'
+                        ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
+                        : getEstadoColor(selectedDisplacementForModal.id_estado) === 'amber'
+                          ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
+                          : getEstadoColor(selectedDisplacementForModal.id_estado) === 'red'
+                            ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
+                            : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
                       }`}
                   >
                     {getEstadoLabel(selectedDisplacementForModal.id_estado)}
@@ -589,7 +558,6 @@ export default function DesplazamientosPage() {
           )}
         </DialogContent>
       </Dialog>
->>>>>>> Stashed changes
     </div>
   );
 }

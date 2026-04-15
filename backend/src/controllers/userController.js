@@ -1,4 +1,5 @@
 const UserService = require('../services/userService');
+const HistorialMovimientosService = require('../services/historialMovimientosService');
 
 const getAllUsers = async (req, res) => {
     try {
@@ -51,7 +52,18 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const userService = new UserService(req.app.get('db'));
+        const historialService = new HistorialMovimientosService(req.app.get('db'));
+        
         await userService.updateUser(req.params.id, req.body);
+
+        // Registro en historial
+        await historialService.createHistorial({
+            id_persona: req.params.id,
+            accion: 'Actualización de Perfil',
+            descripcion: 'El usuario actualizó sus datos de perfil y ajustes de cuenta.',
+            usuario_registro: req.user.correo
+        });
+
         res.status(200).json({ message: 'User updated' });
     } catch (err) {
         res.status(500).json({ error: err.message });

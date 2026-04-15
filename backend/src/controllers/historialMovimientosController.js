@@ -1,20 +1,37 @@
 const HistorialMovimientosService = require('../services/historialMovimientosService');
-
 const { jsPDF } = require('jspdf');
 require('jspdf-autotable');
 
 const getAllHistorial = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const historialService = new HistorialMovimientosService(req.app.get('db'));
         const isAdmin = req.user.id_tipo_cargo === 1; // 1 = Administrador
         let historial;
-
+        
         if (isAdmin) {
             historial = await historialService.getAllHistorial();
         } else {
             historial = await historialService.getHistorialByPersona(req.user.id);
         }
 
+        // Aplicar filtros adicionales si existen (search, id_persona)
+        if (req.query.search) {
+            const search = req.query.search.toLowerCase();
+            historial = historial.filter(h => 
+                h.accion.toLowerCase().includes(search) || 
+                (h.descripcion && h.descripcion.toLowerCase().includes(search)) ||
+                (`${h.nombres} ${h.apellidos}`).toLowerCase().includes(search)
+            );
+        }
+
+        if (req.query.id_persona && isAdmin) {
+            historial = historial.filter(h => h.id_persona == req.query.id_persona);
+        }
+        
         const filtered = historial.slice(offset, offset + limit);
         res.status(200).json({
             data: Array.isArray(filtered) ? filtered : [],
@@ -24,7 +41,7 @@ const getAllHistorial = async (req, res) => {
         });
     } catch (err) {
         console.error('getAllHistorial error:', err);
-        res.status(200).json([]);
+        res.status(200).json({ data: [], total: 0, page: 1, limit: 20 });
     }
 };
 
@@ -82,9 +99,26 @@ const exportHistorialPDF = async (req, res) => {
             historial = await historialService.getHistorialByPersona(req.user.id);
         }
 
-        const doc = new jsPDF();
-        doc.text('Reporte de Historial de Movimientos', 14, 15);
+        // Aplicar los mismos filtros que en la tabla
+        if (req.query.search) {
+            const search = req.query.search.toLowerCase();
+            historial = historial.filter(h => 
+                h.accion.toLowerCase().includes(search) || 
+                (h.descripcion && h.descripcion.toLowerCase().includes(search)) ||
+                (`${h.nombres} ${h.apellidos}`).toLowerCase().includes(search)
+            );
+        }
 
+        if (req.query.id_persona && isAdmin) {
+            historial = historial.filter(h => h.id_persona == req.query.id_persona);
+        }
+
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text('Reporte de Historial de Movimientos', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 22);
+        
         const tableData = historial.map(item => [
             new Date(item.fecha_hora).toLocaleString(),
             `${item.nombres} ${item.apellidos}`,
@@ -94,12 +128,22 @@ const exportHistorialPDF = async (req, res) => {
 
         const autoTable = require('jspdf-autotable').default || require('jspdf-autotable');
         autoTable(doc, {
-            startY: 20,
+            startY: 25,
             head: [['Fecha', 'Persona', 'Acción', 'Descripción']],
             body: tableData,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [0, 120, 215] }
         });
 
         const pdfBuffer = doc.output('arraybuffer');
+        
+        // Log en historial
+        await historialService.createHistorial({
+            id_persona: req.user.id,
+            accion: 'Generación de Reporte PDF',
+            descripcion: `Se exportó un reporte de historial de movimientos${req.query.search ? ` con búsqueda: "${req.query.search}"` : ''}.`,
+            usuario_registro: req.user.correo
+        });
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=historial.pdf');

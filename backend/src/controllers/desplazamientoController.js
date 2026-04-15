@@ -1,4 +1,4 @@
-const ProductService = require('../services/productService');
+const DesplazamientoService = require('../services/desplazamientoService');
 
 const getAllDesplazamientos = async (req, res) => {
     try {
@@ -13,12 +13,11 @@ const getAllDesplazamientos = async (req, res) => {
             id_persona: req.query.id_persona,
             id_motivo: req.query.id_motivo,
             id_estado: req.query.id_estado,
-            fecha_inicio: req.query.fecha_inicio,
-            fecha_fin: req.query.fecha_fin
+            search: req.query.search
         };
 
         const desplazamientos = await displacementService.getAllDesplazamientos(req.user.id, isAdmin, filters);
-
+        
         // Calcular estadísticas sobre el total filtrado
         const stats = desplazamientos.reduce((acc, d) => {
             const estado = d.estado || 'Desconocido';
@@ -26,24 +25,25 @@ const getAllDesplazamientos = async (req, res) => {
             return acc;
         }, {});
 
-        const filtered = desplazamientos.slice(offset, offset + limit);
+        const paginated = desplazamientos.slice(offset, offset + limit);
+
         res.status(200).json({
-            data: Array.isArray(filtered) ? filtered : [],
+            data: paginated,
             total: desplazamientos.length,
-            stats,
             page,
-            limit
+            limit,
+            stats
         });
     } catch (err) {
         console.error('getAllDesplazamientos error:', err);
-        res.status(200).json([]);
+        res.status(200).json({ data: [], total: 0, page: 1, limit: 10, stats: {} });
     }
 };
 
 const getDesplazamientoById = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
-        const desplazamiento = await desplazamientoService.getDesplazamientoById(req.params.id);
+        const desplazamiento = await desplazamientoService.getDesplazamientoById(req.params.id, req.user.id);
         if (!desplazamiento) return res.status(404).json({ message: 'Desplazamiento not found' });
         res.status(200).json(desplazamiento);
     } catch (err) {
@@ -54,7 +54,7 @@ const getDesplazamientoById = async (req, res) => {
 const createDesplazamiento = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
-        const id = await desplazamientoService.createDesplazamiento(req.body);
+        const id = await desplazamientoService.createDesplazamiento(req.body, req.user.id);
         res.status(201).json({ id, ...req.body });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -64,7 +64,7 @@ const createDesplazamiento = async (req, res) => {
 const updateDesplazamiento = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
-        await desplazamientoService.updateDesplazamiento(req.params.id, req.body);
+        await desplazamientoService.updateDesplazamiento(req.params.id, req.body, req.user.id);
         res.status(200).json({ message: 'Desplazamiento updated' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -74,33 +74,11 @@ const updateDesplazamiento = async (req, res) => {
 const deleteDesplazamiento = async (req, res) => {
     try {
         const desplazamientoService = new DesplazamientoService(req.app.get('db'));
-        await desplazamientoService.deleteDesplazamiento(req.params.id);
+        await desplazamientoService.deleteDesplazamiento(req.params.id, req.user.id);
         res.status(200).json({ message: 'Desplazamiento deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-<<<<<<< Updated upstream
 module.exports = { getAllDesplazamientos, getDesplazamientoById, createDesplazamiento, updateDesplazamiento, deleteDesplazamiento };
-=======
-const cancelDesplazamiento = async (req, res) => {
-    try {
-        const desplazamientoService = new DesplazamientoService(req.app.get('db'));
-        await desplazamientoService.updateDesplazamiento(req.params.id, { id_estado: 2 }, req.user.id); // 2 = Cancelado
-        res.status(200).json({ message: 'Desplazamiento cancelado' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-module.exports = {
-    getAllDesplazamientos,
-    getDesplazamientoById,
-    createDesplazamiento,
-    updateDesplazamiento,
-    updateDesplazamientoStatus,
-    deleteDesplazamiento,
-    cancelDesplazamiento,
-};
->>>>>>> Stashed changes

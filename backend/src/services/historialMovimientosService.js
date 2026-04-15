@@ -7,7 +7,7 @@ class HistorialMovimientosService {
         const query = `
             SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
-            LEFT JOIN users u ON hm.id_persona = u.id_persona
+            LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento
             ORDER BY hm.fecha_hora DESC
         `;
@@ -19,7 +19,7 @@ class HistorialMovimientosService {
         const query = `
             SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
-            LEFT JOIN users u ON hm.id_persona = u.id_persona
+            LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento
             WHERE hm.id_persona = ?
             ORDER BY hm.fecha_hora DESC
@@ -42,7 +42,7 @@ class HistorialMovimientosService {
         const query = `
             SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
-            LEFT JOIN users u ON hm.id_persona = u.id_persona
+            LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento
             WHERE hm.id_historial = ?
         `;

@@ -84,13 +84,13 @@ export default function BienesPage() {
       const isAdmin = user?.id_tipo_cargo === 1;
 
       if (isAdmin) {
-        // El admin ve todas las que están en curso, canceladas o rechazadas para monitoreo
-        setIncoming(data.filter((item: any) => [1, 2, 3].includes(item.id_estado) && item.id_persona_origen !== user?.id_persona));
-        setOutgoing(data.filter((item: any) => [1, 2, 3].includes(item.id_estado) && item.id_persona_origen === user?.id_persona));
+        // El admin ve solo las que están en proceso en la vista de tarjetas activas
+        setIncoming(data.filter((item: any) => item.id_estado === 3 && item.id_persona_origen !== user?.id_persona));
+        setOutgoing(data.filter((item: any) => item.id_estado === 3 && item.id_persona_origen === user?.id_persona));
       } else {
-        // Usuarios ven lo que deben procesar (3) o lo que ya falló (1, 2)
-        setIncoming(data.filter((item: any) => item.id_persona_destino === user?.id_persona && [1, 2, 3].includes(item.id_estado)));
-        setOutgoing(data.filter((item: any) => item.id_persona_origen === user?.id_persona && [1, 2, 3].includes(item.id_estado)));
+        // Usuarios ven solo lo que deben procesar (3)
+        setIncoming(data.filter((item: any) => item.id_persona_destino === user?.id_persona && item.id_estado === 3));
+        setOutgoing(data.filter((item: any) => item.id_persona_origen === user?.id_persona && item.id_estado === 3));
       }
     } catch (error) {
       addToast('No se pudieron cargar las solicitudes', 'error');
