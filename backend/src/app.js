@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
 });
 
 // --- Database setup ---
-const DB_NAME = process.env.DB_NAME || 'crud';
+const DB_NAME = process.env.DB_NAME || 'crud_template';
 
 let db;
 
