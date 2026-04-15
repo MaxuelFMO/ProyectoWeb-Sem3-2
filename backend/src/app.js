@@ -11,19 +11,43 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let db
+// --- Routes (register before listen so they're ready) ---
+const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
+const desplazamientoRoutes = require('./routes/desplazamientoRoutes');
+const bienRoutes = require('./routes/bienRoutes');
+const historialMovimientosRoutes = require('./routes/historialMovimientosRoutes');
+const authRoutes = require('./routes/authRoutes');
+const catalogRoutes = require('./routes/catalogRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/personas', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/desplazamientos', desplazamientoRoutes);
+app.use('/api/bienes', bienRoutes);
+app.use('/api', catalogRoutes);
+app.use('/api/historial', historialMovimientosRoutes);
+
+app.get('/', (req, res) => {
+    res.send('API CRUD Monorepo Running');
+});
+
+// --- Database setup ---
+const DB_NAME = process.env.DB_NAME || 'crud';
+
+let db;
+
 async function createDatabase() {
-    await mysql.createConnection({
+    const conn = await mysql.createConnection({
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 3306,
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || ''
-    }).then(conn => {
-        return conn.query('CREATE DATABASE IF NOT EXISTS crud_template')
-            .then(() => conn.end());
     });
-
-    console.log('Database ensured');
+    await conn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
+    await conn.end();
+    console.log(`Database '${DB_NAME}' ensured`);
 }
 
 function createPool() {
@@ -32,7 +56,7 @@ function createPool() {
         port: process.env.DB_PORT || 3306,
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
-        database: 'crud_template',
+        database: DB_NAME,
         multipleStatements: true,
         waitForConnections: true,
         connectionLimit: 10,
@@ -60,7 +84,7 @@ async function runMigrations(pool) {
         db = createPool();        // 2. conecta con DB
 
         await runMigrations(db);  // 3. crea tablas
-        
+
         await seedDatabase(db);   // 4. crea usuario demo
 
         const conn = await db.getConnection();
@@ -69,7 +93,7 @@ async function runMigrations(pool) {
 
         app.set('db', db);
 
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 3001;
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
@@ -79,24 +103,3 @@ async function runMigrations(pool) {
         process.exit(1);
     }
 })();
-
-const userRoutes = require('./routes/userRoutes');
-const productRoutes = require('./routes/productRoutes');
-const desplazamientoRoutes = require('./routes/desplazamientoRoutes');
-const bienRoutes = require('./routes/bienRoutes');
-const historialMovimientosRoutes = require('./routes/historialMovimientosRoutes');
-const authRoutes = require('./routes/authRoutes');
-const catalogRoutes = require('./routes/catalogRoutes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/personas', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/desplazamientos', desplazamientoRoutes);
-app.use('/api/bienes', bienRoutes);
-app.use('/api', catalogRoutes);
-app.use('/api/historial', historialMovimientosRoutes);
-
-app.get('/', (req, res) => {
-    res.send('API CRUD Monorepo Running');
-});

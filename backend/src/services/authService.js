@@ -51,7 +51,7 @@ class AuthService {
         }
 
         const token = jwt.sign(
-            { id: user.id_persona, correo: user.correo },
+            { id: user.id_persona, correo: user.correo, id_tipo_cargo: user.id_tipo_cargo },
             process.env.JWT_SECRET || 'super_secret_key_change_in_production',
             { expiresIn: '24h' }
         );

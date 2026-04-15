@@ -5,7 +5,10 @@ class HistorialMovimientosService {
 
     async getAllHistorial() {
         const query = `
-            SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
+            SELECT hm.*, 
+                   u.nombres, u.apellidos, 
+                   CONCAT(u.nombres, ' ', u.apellidos) AS nombre_persona,
+                   d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
             LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento
@@ -17,7 +20,10 @@ class HistorialMovimientosService {
 
     async getHistorialByPersona(id_persona) {
         const query = `
-            SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
+            SELECT hm.*, 
+                   u.nombres, u.apellidos,
+                   CONCAT(u.nombres, ' ', u.apellidos) AS nombre_persona,
+                   d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
             LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento
@@ -34,13 +40,22 @@ class HistorialMovimientosService {
             INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro)
             VALUES (?, ?, ?, ?, ?)
         `;
-        const [result] = await this.db.execute(query, [id_persona, id_desplazamiento, accion, descripcion, usuario_registro]);
+        const [result] = await this.db.execute(query, [
+            id_persona || null, 
+            id_desplazamiento || null, 
+            accion, 
+            descripcion || null, 
+            usuario_registro || null
+        ]);
         return result.insertId;
     }
 
     async getHistorialById(id) {
         const query = `
-            SELECT hm.*, u.nombres, u.apellidos, d.fecha_inicio, d.fecha_fin
+            SELECT hm.*, 
+                   u.nombres, u.apellidos,
+                   CONCAT(u.nombres, ' ', u.apellidos) AS nombre_persona,
+                   d.fecha_inicio, d.fecha_fin
             FROM HistorialMovimientos hm
             LEFT JOIN Personas u ON hm.id_persona = u.id_persona
             LEFT JOIN Desplazamiento d ON hm.id_desplazamiento = d.id_desplazamiento

@@ -2,250 +2,160 @@ const bcrypt = require('bcryptjs');
 
 const seedDatabase = async (db) => {
     try {
-        // Verificar si el usuario demo ya existe
-        const [existing] = await db.query(
-            'SELECT id_persona FROM Personas WHERE nombres = ?',
-            ['demo']
-        );
+        console.log('--- Iniciando Seed de Base de Datos (Estados Completos) ---');
 
-        if (existing.length > 0) {
-            console.log('✓ Usuario demo ya existe');
-            
-            // Verificar si ya hay desplazamientos
-            const [existingDesplazamientos] = await db.query(
-                'SELECT COUNT(*) as count FROM Desplazamiento'
-            );
-            
-            if (existingDesplazamientos[0].count > 0) {
-                console.log('✓ Desplazamientos de prueba ya existen');
-                return;
-            }
+        // --- 1. USUARIOS ---
+        const passwordHash = await bcrypt.hash('password123', 10);
+        const usersToSeed = [
+            { nombres: 'Admin', apellidos: 'Principal', correo: 'admin@sistema.com', id_tipo_cargo: 1 },
+            { nombres: 'Sofia', apellidos: 'Gerente', correo: 'sofia@sistema.com', id_tipo_cargo: 1 },
+            { nombres: 'Juan', apellidos: 'Pérez', correo: 'juan@sistema.com', id_tipo_cargo: 2 },
+            { nombres: 'Maria', apellidos: 'García', correo: 'maria@sistema.com', id_tipo_cargo: 2 },
+            { nombres: 'Pedro', apellidos: 'López', correo: 'pedro@sistema.com', id_tipo_cargo: 2 },
+            { nombres: 'Ana', apellidos: 'Martínez', correo: 'ana@sistema.com', id_tipo_cargo: 2 },
+        ];
 
-            // El usuario demo existe, ahora crear desplazamientos de prueba
-            const demoPerson = existing[0];
-            const demoId = demoPerson.id_persona;
-
-            // Crear otro usuario para desplazamientos
-            const [recipient] = await db.query(
-                'SELECT id_persona FROM Personas WHERE nombres != ?',
-                ['demo']
-            );
-
-            let recipientId = null;
-            if (!recipient || recipient.length === 0) {
-                // Crear usuario destinatario
-                const hashedPassword = await bcrypt.hash('test', 10);
-                const [resultRecipient] = await db.query(
+        const userIds = {};
+        for (const u of usersToSeed) {
+            const [existing] = await db.query('SELECT id_persona FROM Personas WHERE correo = ?', [u.correo]);
+            if (existing.length === 0) {
+                const [result] = await db.query(
                     'INSERT INTO Personas (nombres, apellidos, correo, id_tipo_cargo, password_hash, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-                    ['Juan', 'Pérez', 'juan@local.com', 2, hashedPassword]
+                    [u.nombres, u.apellidos, u.correo, u.id_tipo_cargo, passwordHash]
                 );
-                recipientId = resultRecipient.insertId;
+                userIds[u.nombres.toLowerCase()] = result.insertId;
             } else {
-                recipientId = recipient[0].id_persona;
+                userIds[u.nombres.toLowerCase()] = existing[0].id_persona;
             }
-
-            // Crear bienes de prueba para el demo
-            const [existingBienes] = await db.query(
-                'SELECT COUNT(*) as count FROM Bien WHERE id_persona = ?',
-                [demoId]
-            );
-
-            let bien1Id, bien2Id, bien3Id;
-
-            if (existingBienes[0].count === 0) {
-                // Crear bienes
-                const [res1] = await db.query(
-                    'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-                    ['Laptop Dell', 'Laptop de trabajo', 1200.00, 1, demoId]
-                );
-                bien1Id = res1.insertId;
-
-                const [res2] = await db.query(
-                    'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-                    ['Monitor LG', 'Monitor 27 pulgadas', 350.00, 1, demoId]
-                );
-                bien2Id = res2.insertId;
-
-                const [res3] = await db.query(
-                    'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-                    ['Escritorio', 'Escritorio de madera', 500.00, 5, demoId]
-                );
-                bien3Id = res3.insertId;
-            } else {
-                const [bienes] = await db.query(
-                    'SELECT id_bien FROM Bien WHERE id_persona = ? LIMIT 3',
-                    [demoId]
-                );
-                bien1Id = bienes[0].id_bien;
-                bien2Id = bienes[1]?.id_bien || bien1Id;
-                bien3Id = bienes[2]?.id_bien || bien1Id;
-            }
-
-            // Crear desplazamientos de prueba
-            const [desplazamiento1] = await db.query(
-                'INSERT INTO Desplazamiento (fecha_inicio, fecha_fin, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [
-                    new Date('2026-04-10 10:00:00'),
-                    new Date('2026-04-12 15:30:00'),
-                    1, // Cambio de residencia
-                    4, // Completado
-                    demoId,
-                    recipientId,
-                    'Traslado a nueva oficina'
-                ]
-            );
-
-            const [desplazamiento2] = await db.query(
-                'INSERT INTO Desplazamiento (fecha_inicio, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (?, ?, ?, ?, ?, ?)',
-                [
-                    new Date('2026-04-14 09:00:00'),
-                    2, // Donativo
-                    3, // En Proceso
-                    demoId,
-                    recipientId,
-                    'Donación de materiales'
-                ]
-            );
-
-            // Asociar bienes con desplazamientos
-            await db.query(
-                'INSERT INTO DesplazamientoBien (id_desplazamiento, id_bien) VALUES (?, ?), (?, ?), (?, ?)',
-                [
-                    desplazamiento1.insertId, bien1Id,
-                    desplazamiento1.insertId, bien2Id,
-                    desplazamiento2.insertId, bien3Id
-                ]
-            );
-
-            // Crear registros de historial
-            await db.query(
-                'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
-                [
-                    demoId,
-                    desplazamiento1.insertId,
-                    'Creados',
-                    'Desplazamiento creado',
-                    'demo'
-                ]
-            );
-
-            await db.query(
-                'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
-                [
-                    recipientId,
-                    desplazamiento1.insertId,
-                    'Actualizados',
-                    'Desplazamiento completado',
-                    'demo'
-                ]
-            );
-
-            console.log('✓ Datos de prueba creados: Desplazamientos y Historial');
-            return;
         }
 
-        // Hash para contraseña "demo"
-        const hashedPassword = await bcrypt.hash('demo', 10);
+        // --- 2. BIENES ---
+        const bienesData = [
+            { nombre: 'Laptop Pro 14', owner: 'juan' },
+            { nombre: 'Monitor curvo 34', owner: 'juan' },
+            { nombre: 'Silla Mesh Plus', owner: 'maria' },
+            { nombre: 'iPad Air 5', owner: 'pedro' },
+            { nombre: 'Cámara DSLR Z6', owner: 'ana' },
+            { nombre: 'Scanner Industrial', owner: 'sofia' },
+        ];
 
-        // Insertar usuario demo
-        const [resultUser] = await db.query(
-            'INSERT INTO Personas (nombres, apellidos, correo, id_tipo_cargo, password_hash, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-            ['demo', 'Usuario de Demostración', 'demo@local.com', 1, hashedPassword]
-        );
+        const bienIds = {};
+        for (const b of bienesData) {
+            const [existing] = await db.query('SELECT id_bien FROM Bien WHERE nombre = ?', [b.nombre]);
+            if (existing.length === 0) {
+                const [res] = await db.query(
+                    'INSERT INTO Bien (nombre, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, 1, ?, TRUE)',
+                    [b.nombre, 1000, userIds[b.owner]]
+                );
+                bienIds[b.nombre] = res.insertId;
+            } else {
+                bienIds[b.nombre] = existing[0].id_bien;
+            }
+        }
 
-        const demoId = resultUser.insertId;
+        // --- 3. DESPLAZAMIENTOS Y HISTORIAS (Todos los estados) ---
+        
+        // Función auxiliar para insertar historia
+        const addHistory = async (userId, desplId, accion, desc) => {
+            await db.query(
+                'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
+                [userId, desplId, accion, desc, 'sistema@seed.local']
+            );
+        };
 
-        // Crear usuario destinatario
-        const hashPassword2 = await bcrypt.hash('test', 10);
-        const [resultRecipient] = await db.query(
-            'INSERT INTO Personas (nombres, apellidos, correo, id_tipo_cargo, password_hash, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-            ['Juan', 'Pérez', 'juan@local.com', 2, hashPassword2]
-        );
+        const scenarioData = [
+            {
+                tag: 'COMPLETADO',
+                motivo: 1, // Cambio residencia
+                estado: 4, // Completado
+                origen: 'juan',
+                destino: 'maria',
+                razon: 'Mudanza a nueva sucursal Norte',
+                items: ['Laptop Pro 14', 'Monitor curvo 34'],
+                steps: [
+                    { action: 'Creado', desc: 'Juan inició el traslado de equipo' },
+                    { action: 'Actualizado', desc: 'Maria confirmó la recepción de los bienes' },
+                    { action: 'Completado', desc: 'Traslado finalizado exitosamente' }
+                ]
+            },
+            {
+                tag: 'EN PROCESO',
+                motivo: 2, // Donativo
+                estado: 3, // En Proceso
+                origen: 'maria',
+                destino: 'pedro',
+                razon: 'Asignación de mobiliario ergonómico',
+                items: ['Silla Mesh Plus'],
+                steps: [
+                    { action: 'Creado', desc: 'Maria solicitó el envío de la silla a Pedro' }
+                ]
+            },
+            {
+                tag: 'RECHAZADO',
+                motivo: 3, // Renuncia
+                estado: 1, // Rechazado
+                origen: 'pedro',
+                destino: 'ana',
+                razon: 'Préstamo de tablet para inventario',
+                items: ['iPad Air 5'],
+                steps: [
+                    { action: 'Creado', desc: 'Pedro solicitó el préstamo' },
+                    { action: 'Rechazado', desc: 'Ana rechazó la solicitud por falta de stock disponible' }
+                ]
+            },
+            {
+                tag: 'CANCELADO',
+                motivo: 4, // Cambio área
+                estado: 2, // Cancelado
+                origen: 'ana',
+                destino: 'juan',
+                razon: 'Envío de cámara para mantenimiento',
+                items: ['Cámara DSLR Z6'],
+                steps: [
+                    { action: 'Creado', desc: 'Ana inició el proceso de envío' },
+                    { action: 'Cancelado', desc: 'Ana canceló la solicitud: se realizará mantenimiento local' }
+                ]
+            }
+        ];
 
-        const recipientId = resultRecipient.insertId;
+        for (const sc of scenarioData) {
+            const [existing] = await db.query('SELECT id_desplazamiento FROM Desplazamiento WHERE razon = ?', [sc.razon]);
+            let desplId;
+            
+            if (existing.length === 0) {
+                const [res] = await db.query(
+                    'INSERT INTO Desplazamiento (fecha_inicio, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (NOW(), ?, ?, ?, ?, ?)',
+                    [sc.motivo, sc.estado, userIds[sc.origen], userIds[sc.destino], sc.razon]
+                );
+                desplId = res.insertId;
 
-        // Crear bienes de prueba
-        const [res1] = await db.query(
-            'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-            ['Laptop Dell', 'Laptop de trabajo', 1200.00, 1, demoId]
-        );
-        const bien1Id = res1.insertId;
+                for (const itemName of sc.items) {
+                    await db.query('INSERT INTO DesplazamientoBien (id_desplazamiento, id_bien) VALUES (?, ?)', [desplId, bienIds[itemName]]);
+                    if (sc.estado === 4) {
+                        await db.query('UPDATE Bien SET id_persona = ? WHERE id_bien = ?', [userIds[sc.destino], bienIds[itemName]]);
+                    }
+                }
+                console.log(`✓ Escenario ${sc.tag} creado.`);
+            } else {
+                desplId = existing[0].id_desplazamiento;
+                console.log(`- Escenario ${sc.tag} ya existe.`);
+            }
 
-        const [res2] = await db.query(
-            'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-            ['Monitor LG', 'Monitor 27 pulgadas', 350.00, 1, demoId]
-        );
-        const bien2Id = res2.insertId;
+            // Asegurar que las historias existan para este escenario
+            for (const step of sc.steps) {
+                const [histExp] = await db.query(
+                    'SELECT id_historial FROM HistorialMovimientos WHERE id_desplazamiento = ? AND accion = ? AND descripcion = ?',
+                    [desplId, step.action, step.desc]
+                );
+                if (histExp.length === 0) {
+                    await addHistory(userIds[sc.origen], desplId, step.action, step.desc);
+                }
+            }
+        }
 
-        const [res3] = await db.query(
-            'INSERT INTO Bien (nombre, descripcion, valor, id_tipo_bien, id_persona, estado) VALUES (?, ?, ?, ?, ?, TRUE)',
-            ['Escritorio', 'Escritorio de madera', 500.00, 5, demoId]
-        );
-        const bien3Id = res3.insertId;
-
-        // Crear desplazamientos de prueba
-        const [desplazamiento1] = await db.query(
-            'INSERT INTO Desplazamiento (fecha_inicio, fecha_fin, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [
-                new Date('2026-04-10 10:00:00'),
-                new Date('2026-04-12 15:30:00'),
-                1, // Cambio de residencia
-                4, // Completado
-                demoId,
-                recipientId,
-                'Traslado a nueva oficina'
-            ]
-        );
-
-        const [desplazamiento2] = await db.query(
-            'INSERT INTO Desplazamiento (fecha_inicio, id_motivo, id_estado, id_persona_origen, id_persona_destino, razon) VALUES (?, ?, ?, ?, ?, ?)',
-            [
-                new Date('2026-04-14 09:00:00'),
-                2, // Donativo
-                3, // En Proceso
-                demoId,
-                recipientId,
-                'Donación de materiales'
-            ]
-        );
-
-        // Asociar bienes con desplazamientos
-        await db.query(
-            'INSERT INTO DesplazamientoBien (id_desplazamiento, id_bien) VALUES (?, ?), (?, ?), (?, ?)',
-            [
-                desplazamiento1.insertId, bien1Id,
-                desplazamiento1.insertId, bien2Id,
-                desplazamiento2.insertId, bien3Id
-            ]
-        );
-
-        // Crear registros de historial
-        await db.query(
-            'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
-            [
-                demoId,
-                desplazamiento1.insertId,
-                'Creados',
-                'Desplazamiento creado',
-                'demo'
-            ]
-        );
-
-        await db.query(
-            'INSERT INTO HistorialMovimientos (id_persona, id_desplazamiento, accion, descripcion, usuario_registro) VALUES (?, ?, ?, ?, ?)',
-            [
-                recipientId,
-                desplazamiento1.insertId,
-                'Actualizados',
-                'Desplazamiento completado',
-                'demo'
-            ]
-        );
-
-        console.log('✓ Usuario demo creado: usuario=demo, contraseña=demo');
-        console.log('✓ Datos de prueba creados: Desplazamientos y Historial');
+        console.log('--- Seed de Escenarios de Estado Completado ---');
     } catch (err) {
-        console.error('Error en seed:', err.message);
+        console.error('Error en el Seed de estados:', err.message);
     }
 };
 
