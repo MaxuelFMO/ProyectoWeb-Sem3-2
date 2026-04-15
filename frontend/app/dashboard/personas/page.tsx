@@ -15,6 +15,7 @@ export default function PersonasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filterEstado, setFilterEstado] = useState<string>('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(10);
@@ -24,7 +25,7 @@ export default function PersonasPage() {
   const { getPersons, deletePerson } = usePersons();
   const { addToast } = useToast();
 
-  const loadPersonas = async (pageNum: number, searchQuery: string) => {
+  const loadPersonas = async (pageNum: number, searchQuery: string, estadoQuery?: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -32,6 +33,7 @@ export default function PersonasPage() {
         page: pageNum,
         limit,
         search: searchQuery || undefined,
+        estado: estadoQuery || undefined,
       });
       setPersonas(Array.isArray(res.data) ? res.data : []);
       setTotal(typeof res.total === 'number' ? res.total : 0);
@@ -47,10 +49,10 @@ export default function PersonasPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadPersonas(1, search);
+      loadPersonas(1, search, filterEstado);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, filterEstado]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro que deseas eliminar esta persona?')) return;
@@ -112,8 +114,8 @@ export default function PersonasPage() {
 
         <CardContent className="pt-0">
           {/* Search Bar */}
-          <div className="pt-6 pb-4">
-            <div className="relative">
+          <div className="pt-6 pb-4 flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <Input
                 type="text"
@@ -122,6 +124,17 @@ export default function PersonasPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 bg-background border-border/40"
               />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={filterEstado}
+                onChange={(e) => setFilterEstado(e.target.value)}
+                className="w-full flex h-10 rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Todos los estados</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+              </select>
             </div>
           </div>
 

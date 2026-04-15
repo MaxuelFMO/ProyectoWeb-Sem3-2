@@ -6,8 +6,8 @@ class UserService {
         this.userModel = new UserModel(db);
     }
 
-    async getAllUsers() {
-        return await this.userModel.findAll();
+    async getAllUsers(filters = {}) {
+        return await this.userModel.findAll(filters);
     }
 
     async getUserById(id) {

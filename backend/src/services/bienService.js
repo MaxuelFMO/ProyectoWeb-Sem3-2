@@ -3,13 +3,25 @@ class BienService {
         this.db = db;
     }
 
+<<<<<<< Updated upstream
     async getAllBienes() {
+=======
+    async getAllBienes(userId, isAdmin = false) {
+>>>>>>> Stashed changes
         const query = `
-            SELECT b.*, tb.nombre as tipo_bien_nombre 
+            SELECT b.*, tb.nombre as tipo_bien_nombre, 
+                   CONCAT(p.nombres, ' ', p.apellidos) as owner_nombre
             FROM Bien b 
             LEFT JOIN TipoBien tb ON b.id_tipo_bien = tb.id_tipo_bien
+<<<<<<< Updated upstream
         `;
         const [rows] = await this.db.execute(query);
+=======
+            LEFT JOIN Personas p ON b.id_persona = p.id_persona
+            ${isAdmin ? '' : 'WHERE b.id_persona = ?'}
+        `;
+        const [rows] = await this.db.execute(query, isAdmin ? [] : [userId]);
+>>>>>>> Stashed changes
         return rows;
     }
 

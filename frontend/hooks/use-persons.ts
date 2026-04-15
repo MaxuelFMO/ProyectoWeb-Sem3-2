@@ -27,6 +27,7 @@ export function usePersons() {
 
   const getPersons = useCallback(async (params?: {
     search?: string;
+    estado?: string | boolean;
     page?: number;
     limit?: number;
   }): Promise<PersonsResponse> => {
@@ -35,6 +36,7 @@ export function usePersons() {
     try {
       const query = new URLSearchParams();
       if (params?.search) query.append('search', params.search);
+      if (params?.estado !== undefined) query.append('estado', params.estado.toString());
       if (params?.page) query.append('page', params.page.toString());
       if (params?.limit) query.append('limit', params.limit.toString());
 

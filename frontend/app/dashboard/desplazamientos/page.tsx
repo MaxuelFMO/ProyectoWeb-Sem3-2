@@ -10,6 +10,12 @@ import DisplacementForm from '@/components/domain/displacement-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+<<<<<<< Updated upstream
+=======
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { usePersons, type Person } from '@/hooks/use-persons';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+>>>>>>> Stashed changes
 
 export default function DesplazamientosPage() {
   const [desplazamientos, setDesplazamientos] = useState<Displacement[]>([]);
@@ -22,12 +28,23 @@ export default function DesplazamientosPage() {
   const [selectedDisplacement, setSelectedDisplacement] = useState<Displacement | null>(null);
   const [filterMotivo, setFilterMotivo] = useState<number | ''>('');
   const [filterEstado, setFilterEstado] = useState<number | ''>('');
+<<<<<<< Updated upstream
 
   const { getDisplacements, deleteDisplacement } = useDisplacements();
+=======
+  const [filterPersona, setFilterPersona] = useState<number | ''>('');
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [globalStats, setGlobalStats] = useState<Record<string, number>>({});
+  const [selectedDisplacementForModal, setSelectedDisplacementForModal] = useState<Displacement | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const { getDisplacements } = useDisplacements();
+  const { getPersons } = usePersons();
+>>>>>>> Stashed changes
   const { motivos, estados } = useCatalogs();
   const { addToast } = useToast();
 
-  const loadDesplazamientos = async (pageNum: number, motivo?: number, estado?: number) => {
+  const loadDesplazamientos = async (pageNum: number, motivo?: number, estado?: number, persona?: number) => {
     setLoading(true);
     setError(null);
     try {
@@ -36,9 +53,11 @@ export default function DesplazamientosPage() {
         limit,
         id_motivo: motivo,
         id_estado: estado,
+        id_persona: persona,
       });
       setDesplazamientos(Array.isArray(res.data) ? res.data : []);
       setTotal(typeof res.total === 'number' ? res.total : 0);
+      if (res.stats) setGlobalStats(res.stats);
       setPage(pageNum);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error loading displacements';
@@ -50,12 +69,20 @@ export default function DesplazamientosPage() {
   };
 
   useEffect(() => {
+    const isAdmin = user?.id_tipo_cargo === 1;
+    if (isAdmin) {
+      getPersons().then(res => setPersons(res.data)).catch(console.error);
+    }
+  }, [user]);
+
+  useEffect(() => {
     loadDesplazamientos(
       1,
-      filterMotivo ? Number(filterMotivo) : undefined,
-      filterEstado ? Number(filterEstado) : undefined
+      filterMotivo !== '' ? Number(filterMotivo) : undefined,
+      filterEstado !== '' ? Number(filterEstado) : undefined,
+      filterPersona !== '' ? Number(filterPersona) : undefined
     );
-  }, [filterMotivo, filterEstado]);
+  }, [filterMotivo, filterEstado, filterPersona]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro que deseas eliminar este desplazamiento?')) return;
@@ -91,20 +118,39 @@ export default function DesplazamientosPage() {
   };
 
   const getEstadoColor = (id: number) => {
-    const estado = estados.find((e) => e.id_estado === id);
-    if (!estado) return 'gray';
-    if (estado.descripcion.includes('Activo')) return 'green';
-    if (estado.descripcion.includes('Completado')) return 'blue';
-    if (estado.descripcion.includes('Cancelado')) return 'red';
+    // 1: Rechazado, 2: Cancelado, 3: En Proceso, 4: Completado
+    if (id === 1) return 'red';
+    if (id === 2) return 'amber';
+    if (id === 3) return 'blue';
+    if (id === 4) return 'green';
     return 'gray';
   };
 
+<<<<<<< Updated upstream
+=======
+  const chartData = useMemo(() => {
+    const states = ['Rechazado', 'Cancelado', 'En Proceso', 'Completado'];
+    return states.map(name => ({
+      name,
+      value: globalStats[name] || 0
+    }));
+  }, [globalStats]);
+
+  const STATE_COLORS: Record<string, string> = {
+    'Rechazado': '#f43f5e',   // rose-500
+    'Cancelado': '#f59e0b',   // amber-500
+    'En Proceso': '#0ea5e9',  // sky-500
+    'Completado': '#10b981',  // emerald-500
+  };
+
+>>>>>>> Stashed changes
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <TrendingUp className="text-primary" size={28} />
+<<<<<<< Updated upstream
           <h1 className="text-3xl font-bold text-foreground">Gestión de Desplazamientos</h1>
         </div>
         <p className="text-muted-foreground">
@@ -112,6 +158,51 @@ export default function DesplazamientosPage() {
         </p>
       </div>
 
+=======
+          <h1 className="text-3xl font-bold text-foreground">
+            {user?.id_tipo_cargo === 1 ? 'Gestión de Desplazamientos' : 'Mis Desplazamientos'}
+          </h1>
+        </div>
+        <p className="text-muted-foreground">
+          {user?.id_tipo_cargo === 1 
+            ? 'Monitorea y gestiona todos los traslados de bienes en el sistema.' 
+            : 'Revisa tus solicitudes de traslado de bienes, tanto enviadas como recibidas.'}
+        </p>
+      </div>
+
+      {/* Chart */}
+      <Card className="border-border/40">
+        <CardHeader>
+          <CardTitle>Estadísticas de Desplazamientos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={STATE_COLORS[entry.name] || '#94a3b8'} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                itemStyle={{ color: 'hsl(var(--foreground))' }}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+>>>>>>> Stashed changes
       {/* Main Card */}
       <Card className="border-border/40">
         <CardHeader className="border-b border-border/40 pb-4">
@@ -134,7 +225,7 @@ export default function DesplazamientosPage() {
 
         <CardContent className="pt-0">
           {/* Filters */}
-          <div className="pt-6 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="pt-6 pb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-foreground uppercase tracking-wide mb-2">
                 Filtrar por motivo
@@ -169,6 +260,25 @@ export default function DesplazamientosPage() {
                 ))}
               </select>
             </div>
+            {user?.id_tipo_cargo === 1 && (
+              <div>
+                <label className="block text-xs font-medium text-foreground uppercase tracking-wide mb-2">
+                  Filtrar por usuario
+                </label>
+                <select
+                  value={filterPersona}
+                  onChange={(e) => setFilterPersona(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full px-3 py-2 bg-background border border-border/40 rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                >
+                  <option value="">Todos los usuarios</option>
+                  {persons.map((p) => (
+                    <option key={p.id_persona} value={p.id_persona}>
+                      {p.nombres} {p.apellidos}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Table */}
@@ -198,10 +308,13 @@ export default function DesplazamientosPage() {
                     <thead className="bg-background border-b border-border/40">
                       <tr>
                         <th className="px-6 py-3 text-left font-semibold text-foreground">
-                          Fecha inicio
+                          Fecha
                         </th>
                         <th className="px-6 py-3 text-left font-semibold text-foreground">
-                          Fecha fin
+                          Origen
+                        </th>
+                        <th className="px-6 py-3 text-left font-semibold text-foreground">
+                          Destino
                         </th>
                         <th className="px-6 py-3 text-left font-semibold text-foreground">
                           Motivo
@@ -221,9 +334,10 @@ export default function DesplazamientosPage() {
                             {new Date(disp.fecha_inicio).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 text-foreground">
-                            {disp.fecha_fin
-                              ? new Date(disp.fecha_fin).toLocaleDateString()
-                              : '-'}
+                            {(disp as any).origen_nombre || '-'}
+                          </td>
+                          <td className="px-6 py-4 text-foreground">
+                            {(disp as any).destino_nombre || '-'}
                           </td>
                           <td className="px-6 py-4 text-foreground">
                             {getMotivoLabel(disp.id_motivo)}
@@ -231,12 +345,14 @@ export default function DesplazamientosPage() {
                           <td className="px-6 py-4">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium border ${getEstadoColor(disp.id_estado) === 'green'
-                                  ? 'bg-green-600/15 text-green-600 border-green-600/20'
+                                  ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
                                   : getEstadoColor(disp.id_estado) === 'blue'
-                                    ? 'bg-blue-600/15 text-blue-600 border-blue-600/20'
-                                    : getEstadoColor(disp.id_estado) === 'red'
-                                      ? 'bg-red-600/15 text-red-600 border-red-600/20'
-                                      : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
+                                    ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
+                                    : getEstadoColor(disp.id_estado) === 'amber'
+                                      ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
+                                      : getEstadoColor(disp.id_estado) === 'red'
+                                        ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
+                                        : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
                                 }`}
                             >
                               {getEstadoLabel(disp.id_estado)}
@@ -279,7 +395,8 @@ export default function DesplazamientosPage() {
                         loadDesplazamientos(
                           page - 1,
                           filterMotivo ? Number(filterMotivo) : undefined,
-                          filterEstado ? Number(filterEstado) : undefined
+                          filterEstado ? Number(filterEstado) : undefined,
+                          filterPersona ? Number(filterPersona) : undefined
                         )
                       }
                       disabled={page === 1}
@@ -297,7 +414,8 @@ export default function DesplazamientosPage() {
                             loadDesplazamientos(
                               p,
                               filterMotivo ? Number(filterMotivo) : undefined,
-                              filterEstado ? Number(filterEstado) : undefined
+                              filterEstado ? Number(filterEstado) : undefined,
+                              filterPersona ? Number(filterPersona) : undefined
                             )
                           }
                           className={`px-3 py-1 rounded-md text-sm transition-colors ${p === page
@@ -313,7 +431,8 @@ export default function DesplazamientosPage() {
                         loadDesplazamientos(
                           page + 1,
                           filterMotivo ? Number(filterMotivo) : undefined,
-                          filterEstado ? Number(filterEstado) : undefined
+                          filterEstado ? Number(filterEstado) : undefined,
+                          filterPersona ? Number(filterPersona) : undefined
                         )
                       }
                       disabled={page === totalPages}
@@ -330,6 +449,7 @@ export default function DesplazamientosPage() {
         </CardContent>
       </Card>
 
+<<<<<<< Updated upstream
       {/* Form Modal */}
       {showForm && (
         <DisplacementForm
@@ -338,6 +458,138 @@ export default function DesplazamientosPage() {
           onSuccess={handleFormSuccess}
         />
       )}
+=======
+      {/* Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalles del Desplazamiento</DialogTitle>
+            <DialogDescription>
+              Información completa del desplazamiento seleccionado.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDisplacementForModal && (
+            <div className="space-y-6">
+              {/* Información General */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    De (Origen)
+                  </p>
+                  <p className="text-sm font-medium">
+                    {(selectedDisplacementForModal as any).origen_nombre || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    Para (Destino)
+                  </p>
+                  <p className="text-sm font-medium">
+                    {(selectedDisplacementForModal as any).destino_nombre || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    Fecha de Inicio
+                  </p>
+                  <p className="text-sm font-medium">
+                    {new Date(selectedDisplacementForModal.fecha_inicio).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    Motivo
+                  </p>
+                  <p className="text-sm font-medium">{getMotivoLabel(selectedDisplacementForModal.id_motivo)}</p>
+                </div>
+                {selectedDisplacementForModal.fecha_fin && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                      Fecha de Fin
+                    </p>
+                    <p className="text-sm font-medium">
+                      {new Date(selectedDisplacementForModal.fecha_fin).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    Estado
+                  </p>
+                  <span
+                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getEstadoColor(selectedDisplacementForModal.id_estado) === 'green'
+                        ? 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20'
+                        : getEstadoColor(selectedDisplacementForModal.id_estado) === 'blue'
+                          ? 'bg-sky-600/15 text-sky-600 border-sky-600/20'
+                          : getEstadoColor(selectedDisplacementForModal.id_estado) === 'amber'
+                            ? 'bg-amber-600/15 text-amber-600 border-amber-600/20'
+                            : getEstadoColor(selectedDisplacementForModal.id_estado) === 'red'
+                              ? 'bg-rose-600/15 text-rose-600 border-rose-600/20'
+                              : 'bg-gray-600/15 text-gray-600 border-gray-600/20'
+                      }`}
+                  >
+                    {getEstadoLabel(selectedDisplacementForModal.id_estado)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bienes */}
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-foreground mb-3">Bienes Desplazados</p>
+                <div className="space-y-2">
+                  {(selectedDisplacementForModal as any).bienes_nombres && (selectedDisplacementForModal as any).bienes_valores ? (
+                    <>
+                      {(selectedDisplacementForModal as any).bienes_nombres.split(', ').map((name: string, index: number) => {
+                        const valores = (selectedDisplacementForModal as any).bienes_valores.split(', ');
+                        const valor = parseFloat(valores[index]) || 0;
+                        return (
+                          <div key={index} className="flex justify-between items-center p-2 bg-muted/30 rounded text-sm">
+                            <span className="text-foreground">{name}</span>
+                            <span className="font-medium text-primary">${valor.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="flex justify-between items-center p-3 bg-primary/10 border border-primary/20 rounded-lg mt-3">
+                        <span className="font-semibold text-foreground">Total Estimado</span>
+                        <span className="text-lg font-bold text-primary">
+                          $
+                          {(selectedDisplacementForModal as any).bienes_valores
+                            .split(', ')
+                            .reduce((sum: number, val: string) => sum + (parseFloat(val) || 0), 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No hay bienes asociados</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Razón */}
+              {(selectedDisplacementForModal as any).razon && (
+                <div className="border-t pt-4">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                    Razón / Notas
+                  </p>
+                  <p className="text-sm text-foreground">{(selectedDisplacementForModal as any).razon}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+>>>>>>> Stashed changes
     </div>
   );
 }

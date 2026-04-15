@@ -18,6 +18,7 @@ export interface Displacement {
 export interface DisplacementsResponse {
   data: Displacement[];
   total: number;
+  stats?: Record<string, number>;
   page: number;
   limit: number;
 }
@@ -29,6 +30,7 @@ export function useDisplacements() {
   const getDisplacements = useCallback(async (params?: {
     id_motivo?: number;
     id_estado?: number;
+    id_persona?: number;
     fecha_inicio?: string;
     fecha_fin?: string;
     page?: number;
@@ -40,6 +42,7 @@ export function useDisplacements() {
       const query = new URLSearchParams();
       if (params?.id_motivo) query.append('id_motivo', params.id_motivo.toString());
       if (params?.id_estado) query.append('id_estado', params.id_estado.toString());
+      if (params?.id_persona) query.append('id_persona', params.id_persona.toString());
       if (params?.fecha_inicio) query.append('fecha_inicio', params.fecha_inicio);
       if (params?.fecha_fin) query.append('fecha_fin', params.fecha_fin);
       if (params?.page) query.append('page', params.page.toString());

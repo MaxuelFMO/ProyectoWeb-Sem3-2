@@ -3,7 +3,8 @@ const BienService = require('../services/bienService');
 const getAllBienes = async (req, res) => {
     try {
         const bienService = new BienService(req.app.get('db'));
-        const bienes = await bienService.getAllBienes();
+        const isAdmin = req.user.id_tipo_cargo === 1;
+        const bienes = await bienService.getAllBienes(req.user.id, isAdmin);
         res.status(200).json(Array.isArray(bienes) ? bienes : []);
     } catch (err) {
         console.error('getAllBienes error:', err);

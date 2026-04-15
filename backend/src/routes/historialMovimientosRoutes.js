@@ -7,6 +7,7 @@ router.use(verifyToken);
 
 router.get('/', historialController.getAllHistorial);
 router.get('/persona/:id_persona', historialController.getHistorialByPersona);
+router.get('/export-pdf', historialController.exportHistorialPDF);
 router.get('/:id', historialController.getHistorialById);
 router.post('/', historialController.createHistorial);
 router.delete('/:id', historialController.deleteHistorial);

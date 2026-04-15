@@ -2,12 +2,28 @@ const UserService = require('../services/userService');
 
 const getAllUsers = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
         const userService = new UserService(req.app.get('db'));
-        const users = await userService.getAllUsers();
-        res.status(200).json(Array.isArray(users) ? users : []);
+        const filters = {
+            search: req.query.search,
+            estado: req.query.estado
+        };
+
+        const users = await userService.getAllUsers(filters);
+        const paginated = users.slice(offset, offset + limit);
+
+        res.status(200).json({
+            data: paginated,
+            total: users.length,
+            page,
+            limit
+        });
     } catch (err) {
         console.error('getAllUsers error:', err);
-        res.status(200).json([]);
+        res.status(500).json({ error: err.message });
     }
 };
 
