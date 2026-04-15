@@ -15,6 +15,14 @@ npm run dev
 
 Ahora puedes acceder al app desde http://localhost:5173.
 
+Las credenciales por defecto son:
+
+```bash
+admin@sistema.com:password123
+juan@sistema.com:password123
+sofia@sistema.com:password123
+```
+
 Enlace al video demostrativo: https://youtu.be/N0ij0VXlaKo
 
 > [!Note]
