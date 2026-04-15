@@ -16,3 +16,13 @@ npm run dev
 Ahora puedes acceder al app desde http://localhost:5173.
 
 Enlace al video demostrativo: https://youtu.be/N0ij0VXlaKo
+
+> [!Note]
+> Developed by:
+> - Perez Ravelo Angel Simon
+> - Rojas Quispe Angela Deniss
+> - Urquizo Oré Francis Maxuel
+
+Gracias por ver el proyecto
+
+![Meme Gif](./media/lagarto-gif.gif)
